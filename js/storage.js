@@ -58,6 +58,20 @@ function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
 
+// A few exam types are CT-based but don't have "CT" in their abbreviation
+// (e.g. LCS — lung cancer screening — is performed via low-dose CT).
+const CT_LIKE_EXAM_TYPES = new Set(['LCS']);
+
+function isCTExamType(examType) {
+  return /ct/i.test(examType) || CT_LIKE_EXAM_TYPES.has(examType);
+}
+
+// Stable sort: CT-related exam types (CT, LDCT, CT Runoff, etc.) always
+// come before everything else, preserving relative order within each group.
+function sortExamTypesGrouped(types) {
+  return [...types].sort((a, b) => (isCTExamType(a) ? 0 : 1) - (isCTExamType(b) ? 0 : 1));
+}
+
 const Store = {
   data: null,
   _userId: null,
@@ -209,13 +223,30 @@ const Store = {
   getRateGroup(id) {
     return this.data.rateGroups[id];
   },
+  // The display order for a group's exam types. Uses the group's saved
+  // examOrder if it still matches the current set of rate keys exactly;
+  // otherwise (never set, or an exam type was added/removed) falls back to
+  // the automatic CT-grouped order. Object key order can't be trusted for
+  // this — jsonb storage (Supabase) doesn't preserve JS object key order on
+  // round-trip, so any persisted ordering has to live in an explicit array.
+  orderedExamTypes(groupId) {
+    const group = this.data.rateGroups[groupId];
+    if (!group) return [];
+    const currentTypes = Object.keys(group.rates);
+    const order = group.examOrder;
+    if (order && order.length === currentTypes.length && order.every(t => currentTypes.includes(t))) {
+      return order;
+    }
+    return sortExamTypesGrouped(currentTypes);
+  },
   examTypesForSite(siteId) {
     const site = this.getSite(siteId);
     if (!site) return [];
     const group = this.getRateGroup(site.rateGroupId);
-    const groupTypes = group ? Object.keys(group.rates) : [];
+    const groupOrder = group ? this.orderedExamTypes(site.rateGroupId) : [];
     const overrideTypes = site.rateOverrides ? Object.keys(site.rateOverrides) : [];
-    return [...new Set([...groupTypes, ...overrideTypes])];
+    const extraTypes = overrideTypes.filter(t => !groupOrder.includes(t));
+    return [...groupOrder, ...sortExamTypesGrouped(extraTypes)];
   },
   // A site's own rate, if it has an override for this exam type, otherwise
   // falls back to its rate group's shared rate.
@@ -285,6 +316,22 @@ const Store = {
     const group = this.data.rateGroups[groupId];
     if (!group) return;
     delete group.rates[examType];
+    this.save();
+  },
+  // Moves an exam type up/down within its CT/non-CT group — CT-related types
+  // always sort before others, so reordering is scoped within that partition.
+  // Persisted as an explicit examOrder array, not object key order, since
+  // jsonb storage (Supabase) doesn't preserve JS object key order.
+  reorderExamType(groupId, examType, direction) {
+    const group = this.data.rateGroups[groupId];
+    if (!group) return;
+    const order = [...this.orderedExamTypes(groupId)];
+    const idx = order.indexOf(examType);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (idx === -1 || swapIdx < 0 || swapIdx >= order.length) return;
+    if (isCTExamType(order[idx]) !== isCTExamType(order[swapIdx])) return;
+    [order[idx], order[swapIdx]] = [order[swapIdx], order[idx]];
+    group.examOrder = order;
     this.save();
   },
   removeRateGroup(id) {

@@ -153,7 +153,7 @@ const ManualEntry = {
   // of which specific site it's logged against, since they share a rate group.
   renderCombinedSection(group, dateISO) {
     const rateGroup = Store.getRateGroup(group.groupId) || { rates: {} };
-    const examTypes = Object.keys(rateGroup.rates);
+    const examTypes = Store.orderedExamTypes(group.groupId);
     const existingEntries = Store.entriesForDateSite(dateISO, 'Other');
     const rows = this.buildRowsHtml(examTypes, (t) => rateGroup.rates[t], existingEntries);
     return `<div class="site-section" data-site-name="Other">${rows}</div>`;
