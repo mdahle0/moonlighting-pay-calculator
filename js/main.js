@@ -1,4 +1,10 @@
 // Entry point: load data, wire up tab switching, init each module.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js');
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   Store.load();
 
