@@ -173,6 +173,13 @@ const Calendar = {
         </div>
         <button type="submit" class="primary-btn">Add entry</button>
       </form>
+      <hr/>
+      <form id="quickTotalForm" class="quick-total-form">
+        <label>Or just log a total for the day
+          <input type="number" id="quickTotalAmount" min="0" step="0.01" placeholder="e.g. 450.00" />
+        </label>
+        <button type="submit" class="secondary-btn">Add total</button>
+      </form>
     `;
 
     body.querySelectorAll('.delete-entry').forEach(btn => {
@@ -219,6 +226,22 @@ const Calendar = {
         count,
         rate,
         amount: rate * count
+      });
+      this.renderDayModalBody(dateISO);
+    });
+
+    document.getElementById('quickTotalForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('quickTotalAmount');
+      const amount = parseFloat(input.value);
+      if (!amount || amount <= 0) return;
+      Store.addEntry({
+        date: dateISO,
+        site: 'Quick total',
+        examType: 'Day total',
+        count: 1,
+        rate: amount,
+        amount
       });
       this.renderDayModalBody(dateISO);
     });

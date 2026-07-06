@@ -3,6 +3,22 @@ const Settings = {
   init() {
     const settings = Store.getSettings();
 
+    const profileNameInput = document.getElementById('profileNameInput');
+    profileNameInput.value = settings.displayName || '';
+    profileNameInput.addEventListener('change', () => {
+      Store.updateSettings({ displayName: profileNameInput.value.trim() });
+      this.renderProfileHeader();
+    });
+    this.renderProfileHeader();
+
+    if (Auth.enabled) {
+      document.getElementById('accountCard').style.display = '';
+      document.getElementById('accountEmail').textContent = Auth.currentUser?.email || '';
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        Auth.signOut();
+      });
+    }
+
     const apiKeyInput = document.getElementById('apiKeyInput');
     apiKeyInput.value = settings.apiKey || '';
     apiKeyInput.addEventListener('change', () => {
@@ -45,6 +61,13 @@ const Settings = {
     this.renderSites();
     this.renderRateGroups();
     this.renderExamLabels();
+  },
+
+  renderProfileHeader() {
+    const name = Store.getSettings().displayName;
+    const header = document.getElementById('profileHeader');
+    header.textContent = name ? `Hi, ${name}` : '';
+    header.style.display = name ? '' : 'none';
   },
 
   expandedOverrides: new Set(),

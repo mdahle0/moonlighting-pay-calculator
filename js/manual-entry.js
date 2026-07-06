@@ -16,6 +16,26 @@ const ManualEntry = {
       this.save();
     });
 
+    document.getElementById('logQuickTotalBtn').addEventListener('click', (e) => {
+      const input = document.getElementById('logQuickTotalAmount');
+      const amount = parseFloat(input.value);
+      if (!amount || amount <= 0) return;
+      Store.addEntry({
+        date: this.selectedDate,
+        site: 'Quick total',
+        examType: 'Day total',
+        count: 1,
+        rate: amount,
+        amount
+      });
+      input.value = '';
+      Calendar.render();
+      const btn = e.target;
+      const original = btn.textContent;
+      btn.textContent = 'Saved ✓';
+      setTimeout(() => { btn.textContent = original; }, 900);
+    });
+
     this.renderDateStrip();
     this.renderGrid();
   },

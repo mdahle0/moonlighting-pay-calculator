@@ -39,7 +39,8 @@ function defaultData() {
       // Manual true-up figures (Settings > Yearly totals), for months/weeks
       // that weren't logged in the app. See Calendar's year-to-date math.
       ytdBaseline: 0,
-      previousYearTotal: 0
+      previousYearTotal: 0,
+      displayName: ''
     }
   };
 }
@@ -59,9 +60,14 @@ function uid() {
 
 const Store = {
   data: null,
+  _userId: null,
+  _remoteEnabled: false,
+  _syncTimer: null,
 
+  // Local-only bootstrap: used when no Supabase session exists yet (or
+  // Supabase isn't configured at all), so the app still works standalone.
   load() {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(this._localStorageKey());
     if (raw) {
       try {
         this.data = JSON.parse(raw);
@@ -71,9 +77,43 @@ const Store = {
     } else {
       this.data = defaultData();
     }
-    const priorSchemaVersion = this.data.schemaVersion || 0;
+    this.applyMigrations();
+    this._writeLocal();
+    return this.data;
+  },
 
-    // Fill in any missing top-level keys for forward compatibility
+  // Auth-backed bootstrap: hydrates this.data from the user's Supabase row
+  // (creating one with defaultData() if this is their first login), then
+  // enables background sync for future save() calls.
+  async loadRemote(userId) {
+    this._userId = userId;
+    const { data: row, error } = await window.supabaseClient
+      .from('user_data')
+      .select('data')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) {
+      console.warn('Failed to load remote data, starting from a fresh copy:', error.message);
+    }
+    if (row && row.data) {
+      this.data = row.data;
+      this.applyMigrations();
+    } else {
+      this.data = defaultData();
+      const { error: insertError } = await window.supabaseClient
+        .from('user_data')
+        .insert({ user_id: userId, data: this.data });
+      if (insertError) console.warn('Failed to create remote row:', insertError.message);
+    }
+    this._remoteEnabled = true;
+    this._writeLocal();
+    return this.data;
+  },
+
+  // Forward-compatibility: fills in any top-level keys added since a user's
+  // data was last saved, then runs one-time schema migrations.
+  applyMigrations() {
+    const priorSchemaVersion = this.data.schemaVersion || 0;
     const d = defaultData();
     for (const k of Object.keys(d)) {
       if (!(k in this.data)) this.data[k] = d[k];
@@ -94,7 +134,6 @@ const Store = {
       if (this.data.rateGroups.other && this.data.rateGroups.other.name === 'Other Sites') {
         this.data.rateGroups.other.name = 'Memphis / Knoxville / Lexington';
       }
-      this.save();
     }
     // One-time migration (schema v2): add Tennessee Valley to that same group.
     if (priorSchemaVersion < 2) {
@@ -102,7 +141,6 @@ const Store = {
         this.data.sites.push({ id: 'tennessee-valley', name: 'Tennessee Valley (Nashville)', rateGroupId: 'other' });
       }
       this.data.schemaVersion = 2;
-      this.save();
     }
     // One-time migration (schema v3): rename sites to their clearer forms.
     // Only touches names that still match the old defaults exactly, so a
@@ -113,13 +151,47 @@ const Store = {
       const tennesseeValley = this.data.sites.find(s => s.id === 'tennessee-valley' && s.name === 'Tennessee Valley');
       if (tennesseeValley) tennesseeValley.name = 'Tennessee Valley (Nashville)';
       this.data.schemaVersion = 3;
-      this.save();
     }
-    return this.data;
   },
 
   save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+    this._writeLocal();
+    this._scheduleRemoteSync();
+  },
+
+  _localStorageKey() {
+    return this._userId ? `${STORAGE_KEY}.${this._userId}` : STORAGE_KEY;
+  },
+
+  _writeLocal() {
+    localStorage.setItem(this._localStorageKey(), JSON.stringify(this.data));
+  },
+
+  _scheduleRemoteSync() {
+    if (!this._remoteEnabled) return;
+    if (this._syncTimer) clearTimeout(this._syncTimer);
+    this._syncTimer = setTimeout(() => this._pushToRemote(), 1000);
+  },
+
+  async _pushToRemote() {
+    if (!this._remoteEnabled || !window.supabaseClient || !this._userId) return;
+    try {
+      const { error } = await window.supabaseClient
+        .from('user_data')
+        .upsert({ user_id: this._userId, data: this.data });
+      if (error) console.warn('Supabase sync failed:', error.message);
+    } catch (e) {
+      console.warn('Supabase sync failed:', e);
+    }
+  },
+
+  // Called on logout: drop in-memory/session state so the next login starts clean.
+  reset() {
+    if (this._syncTimer) clearTimeout(this._syncTimer);
+    this._syncTimer = null;
+    this._userId = null;
+    this._remoteEnabled = false;
+    this.data = null;
   },
 
   // ---- Sites & rate groups ----
