@@ -17,12 +17,18 @@ const ManualEntry = {
       const input = document.getElementById('logQuickTotalAmount');
       const amount = parseFloat(input.value);
       if (!amount || amount <= 0) return;
+      // A quick total replaces the itemized breakdown for the day (and vice
+      // versa in persistDay()) so the two can't both count toward the total.
+      clearTimeout(this.saveTimer);
+      this.saveTimer = null;
+      Store.clearDay(this.selectedDate);
       Store.setDayForSite(this.selectedDate, 'Quick total', [
         { examType: 'Day total', count: 1, rate: amount, amount }
       ]);
       input.value = '';
-      Calendar.render();
+      this.renderGrid();
       this.renderDateStrip();
+      Calendar.render();
       const btn = e.target;
       const original = btn.textContent;
       btn.textContent = 'Saved ✓';
@@ -298,6 +304,11 @@ const ManualEntry = {
     container.querySelectorAll(':scope > .site-section').forEach(section => {
       Store.setDayForSite(dateISO, section.dataset.siteName, readSection(section));
     });
+
+    // Editing the itemized grid supersedes any quick total logged for this
+    // day (see logQuickTotalBtn's handler for the reverse direction) so the
+    // two can't both count toward the day's total.
+    Store.setDayForSite(dateISO, 'Quick total', []);
 
     Calendar.render();
     this.renderDateStrip();
