@@ -52,7 +52,7 @@ const Dashboard = {
       : goal.type === 'month' ? totals.mtdTotal
       : totals.ytdTotal;
     const pct = goal.amount > 0 ? Math.min(100, (current / goal.amount) * 100) : 0;
-    const overflow = goal.amount > 0 && current > goal.amount;
+    const met = goal.amount > 0 && current >= goal.amount;
 
     let paceText = null;
     if (goal.type === 'year' && goal.amount > 0) {
@@ -68,7 +68,7 @@ const Dashboard = {
       else paceText = 'Behind pace';
     }
 
-    return { type: goal.type, amount: goal.amount, current, pct, overflow, paceText };
+    return { type: goal.type, amount: goal.amount, current, pct, met, paceText };
   },
 
   buildHTML(data) {
@@ -76,13 +76,14 @@ const Dashboard = {
       ? `${fmtMoney(data.periodTotal)} estimated`
       : `${fmtMoney(data.periodTotal)} and counting`;
 
-    const goalsHtml = data.goalResults.map(g => `
+    const goalRows = data.goalResults.map(g => `
       <div class="goal-bar-row">
         <div class="goal-bar-label">${goalTypeLabel(g.type)} goal: <span class="money">${fmtMoney(g.current)} / ${fmtMoney(g.amount)}</span></div>
-        <div class="goal-bar-track"><div class="goal-bar-fill${g.overflow ? ' overflow' : ''}" style="width:${g.pct}%"></div></div>
+        <div class="goal-bar-track"><div class="goal-bar-fill${g.met ? ' met' : ''}" style="width:${g.pct}%"></div></div>
         ${g.paceText ? `<div class="goal-pace-text ${paceClass(g.paceText)}">${g.paceText}</div>` : ''}
       </div>
     `).join('');
+    const goalsHtml = data.goalResults.length ? `<div class="goals-row">${goalRows}</div>` : '';
 
     const breakdownHtml = data.siteBreakdown.map(([site, amt]) =>
       `<div class="breakdown-row"><span>${escapeHtml(site)}</span><span class="money">${fmtMoney(amt)}</span></div>`

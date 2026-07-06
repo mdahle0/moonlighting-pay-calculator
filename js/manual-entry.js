@@ -59,6 +59,8 @@ const ManualEntry = {
       if (d === todayStr) classes.push('today');
       const year = dt.getFullYear();
       if (!holidaysByYear[year]) holidaysByYear[year] = federalHolidaysForYear(year);
+      const markerClass = dayMarkerClass(d, paydays, holidaysByYear[year]).trim();
+      if (markerClass) classes.push(...markerClass.split(' '));
       return `
         <button type="button" class="${classes.join(' ')}" data-date="${d}">
           ${dayBadgesHtml(d, paydays, holidaysByYear[year])}

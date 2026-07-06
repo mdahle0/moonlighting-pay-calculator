@@ -82,7 +82,8 @@ const Calendar = {
       const dateISO = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const total = Store.totalForDate(dateISO);
       const cell = document.createElement('div');
-      cell.className = 'day-cell' + (dateISO === todayStr ? ' today' : '') + (total > 0 ? ' has-entries' : '');
+      cell.className = 'day-cell' + (dateISO === todayStr ? ' today' : '') + (total > 0 ? ' has-entries' : '')
+        + dayMarkerClass(dateISO, paydays, holidays);
       cell.innerHTML = `
         <span class="day-num">${day}</span>
         ${dayBadgesHtml(dateISO, paydays, holidays)}
@@ -336,6 +337,18 @@ function paydaysInRange(startISO, endISO) {
     k++;
   }
   return paydays;
+}
+
+// CSS class(es) for the day's background tint: green for payday, red for a
+// holiday, or both (diagonally split via CSS) if it's both — e.g. a holiday
+// that lands on the payday Friday.
+function dayMarkerClass(dateISO, paydays, holidays) {
+  const isPayday = paydays.has(dateISO);
+  const isHoliday = !!holidays[dateISO];
+  if (isPayday && isHoliday) return ' payday holiday';
+  if (isPayday) return ' payday';
+  if (isHoliday) return ' holiday';
+  return '';
 }
 
 function dayBadgesHtml(dateISO, paydays, holidays) {
