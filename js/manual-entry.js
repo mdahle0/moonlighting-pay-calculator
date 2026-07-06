@@ -9,11 +9,9 @@ const ManualEntry = {
 
   init() {
     this.selectedDate = todayISO();
+    this.saveTimer = null;
 
-    document.getElementById('manualForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.save();
-    });
+    window.addEventListener('beforeunload', () => this.flushAutoSave());
 
     document.getElementById('logQuickTotalBtn').addEventListener('click', (e) => {
       const input = document.getElementById('logQuickTotalAmount');
@@ -29,6 +27,7 @@ const ManualEntry = {
       });
       input.value = '';
       Calendar.render();
+      this.renderDateStrip();
       const btn = e.target;
       const original = btn.textContent;
       btn.textContent = 'Saved ✓';
@@ -61,17 +60,20 @@ const ManualEntry = {
       if (!holidaysByYear[year]) holidaysByYear[year] = federalHolidaysForYear(year);
       const markerClass = dayMarkerClass(d, paydays, holidaysByYear[year]).trim();
       if (markerClass) classes.push(...markerClass.split(' '));
+      const total = Store.totalForDate(d);
       return `
         <button type="button" class="${classes.join(' ')}" data-date="${d}">
           ${dayBadgesHtml(d, paydays, holidaysByYear[year])}
           <span class="date-chip-dow">${dow}</span>
           <span class="date-chip-num">${dt.getDate()}</span>
+          ${total > 0 ? `<span class="date-chip-amt money">${fmtMoney(total, true)}</span>` : ''}
         </button>
       `;
     }).join('');
 
     strip.querySelectorAll('.date-chip').forEach(btn => {
       btn.addEventListener('click', () => {
+        this.flushAutoSave();
         this.selectedDate = btn.dataset.date;
         this.renderDateStrip();
         this.renderGrid();
@@ -80,6 +82,7 @@ const ManualEntry = {
   },
 
   renderGrid() {
+    this.flushAutoSave();
     const dateISO = this.selectedDate;
     const container = document.getElementById('manualSitesContainer');
     const sites = Store.getActiveSites();
@@ -128,6 +131,7 @@ const ManualEntry = {
         const count = parseInt(countInput.value, 10);
         amountEl.textContent = count > 0 ? fmtMoney(rate * count) : '';
         this.refreshTotal();
+        this.scheduleAutoSave();
       });
     });
 
@@ -215,7 +219,24 @@ const ManualEntry = {
     document.getElementById('manualDayTotal').textContent = fmtMoney(total);
   },
 
-  save() {
+  // Debounced auto-save: waits for a pause in typing so counts aren't
+  // written mid-keystroke, then persists and refreshes the day-strip totals.
+  scheduleAutoSave() {
+    this.showSaveStatus('saving');
+    clearTimeout(this.saveTimer);
+    this.saveTimer = setTimeout(() => this.persistDay(), 700);
+  },
+
+  // Persists immediately, bypassing the debounce — used whenever the
+  // selected date/site set is about to change so nothing typed is lost.
+  flushAutoSave() {
+    if (!this.saveTimer) return;
+    clearTimeout(this.saveTimer);
+    this.saveTimer = null;
+    this.persistDay();
+  },
+
+  persistDay() {
     const dateISO = this.selectedDate;
     const container = document.getElementById('manualSitesContainer');
 
@@ -233,7 +254,20 @@ const ManualEntry = {
     });
 
     Calendar.render();
-    flashSaved(document.getElementById('manualForm'));
+    this.renderDateStrip();
+    this.showSaveStatus('saved');
+  },
+
+  showSaveStatus(state) {
+    const el = document.getElementById('manualSaveStatus');
+    if (!el) return;
+    clearTimeout(this.statusTimer);
+    if (state === 'saving') {
+      el.textContent = 'Saving…';
+    } else {
+      el.textContent = 'Saved ✓';
+      this.statusTimer = setTimeout(() => { el.textContent = ''; }, 1500);
+    }
   },
 
   refreshSiteOptions() {
@@ -249,10 +283,3 @@ const ManualEntry = {
     this.renderGrid();
   }
 };
-
-function flashSaved(form) {
-  const btn = form.querySelector('button[type="submit"]');
-  const original = btn.textContent;
-  btn.textContent = 'Saved ✓';
-  setTimeout(() => { btn.textContent = original; }, 900);
-}
