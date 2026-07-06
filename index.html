@@ -24,6 +24,8 @@
       <button class="tab-btn" data-tab="settings">Settings</button>
     </nav>
 
+    <div id="profileHeader" class="profile-header"></div>
+
     <main>
       <section id="tab-calendar" class="tab-panel">
         <div class="period-card" id="periodCard"></div>
@@ -73,6 +75,13 @@
 
       <section id="tab-settings" class="tab-panel">
         <h2>Settings</h2>
+
+        <div class="card">
+          <h3>Profile</h3>
+          <label>Your name
+            <input type="text" id="profileNameInput" placeholder="e.g. Alex" />
+          </label>
+        </div>
 
         <div class="card" id="accountCard" style="display: none;">
           <h3>Account</h3>
