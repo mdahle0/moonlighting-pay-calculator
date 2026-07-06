@@ -35,7 +35,8 @@ function defaultData() {
     settings: {
       apiKey: '',
       periodType: 'biweekly',
-      periodAnchor: '2026-06-28'
+      periodAnchor: '2026-06-28',
+      displayName: ''
     }
   };
 }
@@ -112,6 +113,10 @@ const Store = {
     const d = defaultData();
     for (const k of Object.keys(d)) {
       if (!(k in this.data)) this.data[k] = d[k];
+    }
+    // Fill in any settings keys added since a user's data was last saved.
+    for (const k of Object.keys(d.settings)) {
+      if (!(k in this.data.settings)) this.data.settings[k] = d.settings[k];
     }
     // One-time migration: the old placeholder "Other Sites" bucket becomes the
     // three actual sites (Memphis, Knoxville, Lexington), all on the same rate group.

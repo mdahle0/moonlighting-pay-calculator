@@ -24,6 +24,8 @@
       <button class="tab-btn" data-tab="settings">Settings</button>
     </nav>
 
+    <div id="profileHeader" class="profile-header"></div>
+
     <main>
       <section id="tab-calendar" class="tab-panel">
         <div class="period-card" id="periodCard"></div>
@@ -69,10 +71,26 @@
             <button type="submit" class="primary-btn">Save day</button>
           </form>
         </div>
+
+        <div class="card">
+          <h3>Or just log a total</h3>
+          <p class="muted">Log a single dollar amount for the day selected above, without itemizing exam types.</p>
+          <div class="quick-total-form-row">
+            <input type="number" id="logQuickTotalAmount" min="0" step="0.01" placeholder="e.g. 450.00" />
+            <button type="button" id="logQuickTotalBtn" class="secondary-btn">Add total</button>
+          </div>
+        </div>
       </section>
 
       <section id="tab-settings" class="tab-panel">
         <h2>Settings</h2>
+
+        <div class="card">
+          <h3>Profile</h3>
+          <label>Your name
+            <input type="text" id="profileNameInput" placeholder="e.g. Alex" />
+          </label>
+        </div>
 
         <div class="card" id="accountCard" style="display: none;">
           <h3>Account</h3>
