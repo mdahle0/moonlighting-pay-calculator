@@ -23,6 +23,7 @@ const Calendar = {
   render() {
     this.renderPeriodCard();
     this.renderMonth();
+    this.renderYearSummary();
   },
 
   renderPeriodCard() {
@@ -48,6 +49,45 @@ const Calendar = {
       </div>
       ${breakdown ? `<div class="breakdown">${breakdown}</div>` : ''}
     `;
+  },
+
+  // Month-to-date is purely what's logged in the app this calendar month.
+  // Year-to-date adds the current period's logged entries on top of the
+  // manually-maintained baseline (Settings > Yearly totals), since months
+  // logged before that baseline was last updated are already folded into it.
+  renderYearSummary() {
+    const settings = Store.getSettings();
+    const todayStr = todayISO();
+
+    const mtdTotal = Store.entriesInRange(startOfMonthISO(), todayStr)
+      .reduce((s, e) => s + e.amount, 0);
+
+    const { start: periodStart } = currentPeriodBounds();
+    const yearStart = startOfYearISO();
+    const ytdEntriesStart = periodStart < yearStart ? yearStart : periodStart;
+    const periodToDateTotal = Store.entriesInRange(ytdEntriesStart, todayStr)
+      .reduce((s, e) => s + e.amount, 0);
+    const ytdTotal = (settings.ytdBaseline || 0) + periodToDateTotal;
+
+    const lastYearTotal = settings.previousYearTotal || 0;
+
+    document.getElementById('mtdTotal').textContent = fmtMoney(mtdTotal);
+    document.getElementById('ytdTotal').textContent = fmtMoney(ytdTotal);
+    document.getElementById('lastYearTotal').textContent = fmtMoney(lastYearTotal);
+
+    const compareEl = document.getElementById('yearCompare');
+    if (lastYearTotal > 0) {
+      const paceTarget = lastYearTotal * monthsElapsedFraction();
+      const diff = ytdTotal - paceTarget;
+      const pct = paceTarget > 0 ? (Math.abs(diff) / paceTarget) * 100 : 0;
+      const aheadBehind = diff >= 0 ? 'ahead of' : 'behind';
+      compareEl.textContent =
+        `Year to date is ${fmtMoney(Math.abs(diff))} (${pct.toFixed(1)}%) ${aheadBehind} last year's pace through this point (${fmtMoney(paceTarget)}).`;
+      compareEl.className = 'compare-line ' + (diff >= 0 ? 'ahead' : 'behind');
+    } else {
+      compareEl.textContent = 'Enter last year\'s total in Settings to see a pace comparison.';
+      compareEl.className = 'compare-line';
+    }
   },
 
   renderMonth() {
@@ -201,6 +241,24 @@ function currentPeriodBounds(refDateISO) {
 
 function startOfDay(d) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function startOfMonthISO() {
+  const d = new Date();
+  return isoDate(new Date(d.getFullYear(), d.getMonth(), 1));
+}
+
+function startOfYearISO() {
+  const d = new Date();
+  return isoDate(new Date(d.getFullYear(), 0, 1));
+}
+
+// Fraction of the year elapsed, counting the current month proportionally
+// by day (e.g. April 30 -> 4/12, since April has 30 days and today is day 30).
+function monthsElapsedFraction() {
+  const d = new Date();
+  const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  return (d.getMonth() + d.getDate() / daysInMonth) / 12;
 }
 
 function parseISO(s) {

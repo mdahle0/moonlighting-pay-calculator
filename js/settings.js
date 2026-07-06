@@ -25,6 +25,20 @@ const Settings = {
       ManualEntry.refreshDateStrip();
     });
 
+    const ytdBaselineInput = document.getElementById('ytdBaselineInput');
+    ytdBaselineInput.value = settings.ytdBaseline || '';
+    ytdBaselineInput.addEventListener('change', () => {
+      Store.updateSettings({ ytdBaseline: parseFloat(ytdBaselineInput.value) || 0 });
+      Calendar.render();
+    });
+
+    const previousYearTotalInput = document.getElementById('previousYearTotalInput');
+    previousYearTotalInput.value = settings.previousYearTotal || '';
+    previousYearTotalInput.addEventListener('change', () => {
+      Store.updateSettings({ previousYearTotal: parseFloat(previousYearTotalInput.value) || 0 });
+      Calendar.render();
+    });
+
     document.getElementById('addSiteBtn').addEventListener('click', () => this.addSite());
     document.getElementById('addRateGroupBtn').addEventListener('click', () => this.addRateGroup());
 

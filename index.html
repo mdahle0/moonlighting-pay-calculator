@@ -28,6 +28,17 @@
       <section id="tab-calendar" class="tab-panel">
         <div class="period-card" id="periodCard"></div>
 
+        <div class="stat-row">
+          <div class="stat-card">
+            <div class="period-label">Month to date</div>
+            <div class="stat-total" id="mtdTotal"></div>
+          </div>
+          <div class="stat-card">
+            <div class="period-label">Year to date</div>
+            <div class="stat-total" id="ytdTotal"></div>
+          </div>
+        </div>
+
         <div class="calendar-header">
           <button id="prevMonth" class="icon-btn" aria-label="Previous month">&#8249;</button>
           <h2 id="monthLabel"></h2>
@@ -37,6 +48,12 @@
           <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
         </div>
         <div id="calendarGrid" class="calendar-grid"></div>
+
+        <div class="card" id="lastYearCard">
+          <div class="period-label">Last year total</div>
+          <div class="stat-total" id="lastYearTotal"></div>
+          <div class="compare-line" id="yearCompare"></div>
+        </div>
       </section>
 
       <section id="tab-log" class="tab-panel active">
@@ -93,6 +110,19 @@
             </label>
             <label>Period start (any past cycle start date)
               <input type="date" id="periodAnchor" />
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Yearly totals</h3>
+          <p class="muted">Use these to true up the Calendar page's totals if some weeks or months weren't logged in the app.</p>
+          <div class="form-row">
+            <label>Year-to-date earnings (before current pay period)
+              <input type="number" id="ytdBaselineInput" step="0.01" min="0" />
+            </label>
+            <label>Last year's total earnings
+              <input type="number" id="previousYearTotalInput" step="0.01" min="0" />
             </label>
           </div>
         </div>
