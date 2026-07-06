@@ -1,10 +1,12 @@
-const CACHE_NAME = 'moonlighting-v1';
+const CACHE_NAME = 'moonlighting-v2';
 const PRECACHE_URLS = [
   './',
   './index.html',
   './styles.css',
   './manifest.json',
+  './js/supabase-config.js',
   './js/storage.js',
+  './js/auth.js',
   './js/calendar.js',
   './js/manual-entry.js',
   './js/chat.js',
@@ -36,6 +38,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (event.request.url.includes('api.anthropic.com')) return;
+  if (event.request.url.includes('.supabase.co')) return;
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
