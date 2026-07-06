@@ -116,23 +116,34 @@ main { flex: 1; padding: 16px; }
   border: 1px solid var(--border);
 }
 
-/* Period card */
-.period-card {
+/* Dashboard (pinned to the top of Calendar + Log a day) */
+.dashboard-mount:empty { display: none; }
+.dashboard-card {
   background: var(--surface);
   border-radius: var(--radius);
   padding: 18px;
   margin-bottom: 20px;
   border: 1px solid var(--border);
 }
-.period-top { display: flex; justify-content: space-between; align-items: flex-end; }
+.dash-payday-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 14px; }
 .period-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
-.period-range { font-size: 15px; font-weight: 500; margin-top: 2px; }
-.period-total { font-size: 26px; font-weight: 700; color: var(--accent); }
+.dash-payday-amt { font-size: 20px; font-weight: 700; color: var(--accent); }
 .breakdown { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
 .breakdown-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; color: var(--muted); }
 .breakdown-row span:last-child { color: var(--text); font-weight: 500; }
 
-.stat-row { display: flex; gap: 12px; margin-bottom: 20px; }
+.goal-bar-row { margin-top: 14px; }
+.goal-bar-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.goal-bar-label .money { color: var(--text); font-weight: 600; }
+.goal-bar-track { height: 10px; border-radius: 999px; background: var(--bg); overflow: hidden; }
+.goal-bar-fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.2s; }
+.goal-bar-fill.overflow { background: var(--danger); }
+.goal-pace-text { font-size: 12px; margin-top: 4px; font-weight: 600; }
+.goal-pace-text.ahead { color: var(--accent); }
+.goal-pace-text.behind { color: var(--danger); }
+.goal-pace-text.on-pace { color: var(--muted); }
+
+.stat-row { display: flex; gap: 12px; margin-bottom: 0; }
 .stat-card {
   flex: 1;
   background: var(--surface);
@@ -141,10 +152,14 @@ main { flex: 1; padding: 16px; }
   border: 1px solid var(--border);
 }
 .stat-total { font-size: 20px; font-weight: 700; margin-top: 2px; }
-#lastYearCard { margin-top: 20px; }
+#secondaryStatsCard { margin-top: 20px; }
+#secondaryStatsCard .stat-row { margin-bottom: 0; }
 .compare-line { font-size: 13px; color: var(--muted); margin-top: 8px; }
 .compare-line.ahead { color: var(--accent); }
 .compare-line.behind { color: var(--danger); }
+
+/* Hide dollar amounts (Settings > Display) */
+body.hide-amounts .money { filter: blur(6px); user-select: none; }
 
 /* Calendar */
 .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
@@ -168,6 +183,7 @@ main { flex: 1; padding: 16px; }
   gap: 4px;
 }
 .day-cell {
+  position: relative;
   aspect-ratio: 1;
   border-radius: 10px;
   background: var(--surface);
@@ -185,6 +201,16 @@ main { flex: 1; padding: 16px; }
 .day-cell.has-entries { background: var(--accent-soft); }
 .day-num { font-size: 12px; color: var(--muted); }
 .day-amt { font-size: 12px; font-weight: 700; color: var(--accent); align-self: flex-end; }
+
+/* Payday (💵) / VA holiday (🎌) badges — top-right corner of a day cell or date chip */
+.day-badges {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  gap: 1px;
+}
+.day-badge { font-size: 9px; line-height: 1; }
 
 /* Forms */
 .form-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
@@ -219,6 +245,7 @@ main { flex: 1; padding: 16px; }
   display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 16px;
 }
 .date-chip {
+  position: relative;
   padding: 7px 0;
   border-radius: 10px; border: 1px solid var(--border); background: var(--bg);
   cursor: pointer; font-family: inherit; color: var(--text);

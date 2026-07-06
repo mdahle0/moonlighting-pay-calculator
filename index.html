@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Moonlighting</title>
+<title>VISN 9 Moonlighting</title>
 <meta name="description" content="Track per-diem shifts and calculate pay by pay period." />
-<meta property="og:title" content="Moonlighting" />
+<meta property="og:title" content="VISN 9 Moonlighting" />
 <meta property="og:description" content="Track per-diem shifts and calculate pay by pay period." />
 <meta property="og:image" content="https://mdahle0.github.io/moonlighting-pay-calculator/og-image.png" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://mdahle0.github.io/moonlighting-pay-calculator/" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Moonlighting" />
+<meta name="twitter:title" content="VISN 9 Moonlighting" />
 <meta name="twitter:description" content="Track per-diem shifts and calculate pay by pay period." />
 <meta name="twitter:image" content="https://mdahle0.github.io/moonlighting-pay-calculator/og-image.png" />
 <link rel="icon" type="image/svg+xml" href="icon.svg" />
@@ -19,7 +19,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
 <link rel="manifest" href="manifest.json" />
-<meta name="apple-mobile-web-app-title" content="Moonlighting" />
+<meta name="apple-mobile-web-app-title" content="VISN 9 Moonlighting" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="theme-color" content="#1c1c1e" />
@@ -48,18 +48,7 @@
 
     <main>
       <section id="tab-calendar" class="tab-panel">
-        <div class="period-card" id="periodCard"></div>
-
-        <div class="stat-row">
-          <div class="stat-card">
-            <div class="period-label">Month to date</div>
-            <div class="stat-total" id="mtdTotal"></div>
-          </div>
-          <div class="stat-card">
-            <div class="period-label">Year to date</div>
-            <div class="stat-total" id="ytdTotal"></div>
-          </div>
-        </div>
+        <div class="dashboard-mount" id="dashboardCalendar"></div>
 
         <div class="calendar-header">
           <button id="prevMonth" class="icon-btn" aria-label="Previous month">&#8249;</button>
@@ -71,14 +60,24 @@
         </div>
         <div id="calendarGrid" class="calendar-grid"></div>
 
-        <div class="card" id="lastYearCard">
-          <div class="period-label">Last year total</div>
-          <div class="stat-total" id="lastYearTotal"></div>
+        <div class="card" id="secondaryStatsCard">
+          <div class="stat-row">
+            <div class="stat-card">
+              <div class="period-label">Month to date</div>
+              <div class="stat-total money" id="mtdTotal"></div>
+            </div>
+            <div class="stat-card">
+              <div class="period-label">Last year total</div>
+              <div class="stat-total money" id="lastYearTotal"></div>
+            </div>
+          </div>
           <div class="compare-line" id="yearCompare"></div>
         </div>
       </section>
 
       <section id="tab-log" class="tab-panel active">
+        <div class="dashboard-mount" id="dashboardLog"></div>
+
         <h2>Log a day</h2>
 
         <div class="card">
@@ -172,6 +171,48 @@
         </div>
 
         <div class="card">
+          <h3>Goals</h3>
+          <p class="muted">Set up to two earnings goals to track progress on the Dashboard.</p>
+          <div class="form-row">
+            <label>Goal 1 timeframe
+              <select id="goal1Type">
+                <option value="">Not set</option>
+                <option value="payPeriod">Pay period</option>
+                <option value="month">Month</option>
+                <option value="year">Year</option>
+              </select>
+            </label>
+            <label>Goal 1 amount
+              <input type="number" id="goal1Amount" step="0.01" min="0" />
+            </label>
+          </div>
+          <div class="form-row">
+            <label>Goal 2 timeframe
+              <select id="goal2Type">
+                <option value="">Not set</option>
+                <option value="payPeriod">Pay period</option>
+                <option value="month">Month</option>
+                <option value="year">Year</option>
+              </select>
+            </label>
+            <label>Goal 2 amount
+              <input type="number" id="goal2Amount" step="0.01" min="0" />
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Display</h3>
+          <div class="settings-row">
+            <span>Hide dollar amounts</span>
+            <label class="toggle-switch" title="Blur dollar amounts on the Calendar and Dashboard">
+              <input type="checkbox" id="hideAmountsToggle" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
           <h3>Sites &amp; rates</h3>
           <p class="muted">Sites in the same rate group always pay the same per exam type.</p>
           <div id="sitesList"></div>
@@ -206,7 +247,7 @@
   <div id="authModal" class="modal-overlay open">
     <div class="modal">
       <div class="modal-header">
-        <h3>Moonlighting</h3>
+        <h3>VISN 9 Moonlighting</h3>
       </div>
       <form id="authForm">
         <label>Email
@@ -227,6 +268,7 @@
   <script src="js/storage.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/calendar.js"></script>
+  <script src="js/dashboard.js"></script>
   <script src="js/manual-entry.js"></script>
   <script src="js/chat.js"></script>
   <script src="js/settings.js"></script>

@@ -5,7 +5,6 @@
 // since the pay is identical either way, but can be expanded to attribute
 // counts to each site individually.
 const ManualEntry = {
-  expandedGroups: new Set(),
   selectedDate: null,
 
   init() {
@@ -44,6 +43,8 @@ const ManualEntry = {
     const { start, end } = currentPeriodBounds();
     const strip = document.getElementById('manualDateStrip');
     const todayStr = todayISO();
+    const paydays = paydaysInRange(start, end);
+    const holidaysByYear = {};
 
     const days = [];
     for (let d = parseISO(start); d <= parseISO(end); d.setDate(d.getDate() + 1)) {
@@ -56,8 +57,11 @@ const ManualEntry = {
       const classes = ['date-chip'];
       if (d === this.selectedDate) classes.push('selected');
       if (d === todayStr) classes.push('today');
+      const year = dt.getFullYear();
+      if (!holidaysByYear[year]) holidaysByYear[year] = federalHolidaysForYear(year);
       return `
         <button type="button" class="${classes.join(' ')}" data-date="${d}">
+          ${dayBadgesHtml(d, paydays, holidaysByYear[year])}
           <span class="date-chip-dow">${dow}</span>
           <span class="date-chip-num">${dt.getDate()}</span>
         </button>
@@ -107,11 +111,9 @@ const ManualEntry = {
     container.querySelectorAll('.group-toggle-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const groupId = btn.dataset.groupId;
-        if (this.expandedGroups.has(groupId)) {
-          this.expandedGroups.delete(groupId);
-        } else {
-          this.expandedGroups.add(groupId);
-        }
+        const expandedRateGroups = { ...Store.getSettings().expandedRateGroups };
+        expandedRateGroups[groupId] = !expandedRateGroups[groupId];
+        Store.updateSettings({ expandedRateGroups });
         this.renderGrid();
       });
     });
@@ -131,7 +133,7 @@ const ManualEntry = {
   },
 
   renderGroupSection(group, dateISO) {
-    const expanded = this.expandedGroups.has(group.groupId);
+    const expanded = !!Store.getSettings().expandedRateGroups?.[group.groupId];
     const toggleLabel = expanded ? 'Collapse into one' : 'Edit sites individually';
     const bodyHtml = expanded
       ? group.sites.map(s => this.renderSiteSection(s, dateISO, true)).join('')

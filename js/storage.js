@@ -37,10 +37,21 @@ function defaultData() {
       periodType: 'biweekly',
       periodAnchor: '2026-06-28',
       // Manual true-up figures (Settings > Yearly totals), for months/weeks
-      // that weren't logged in the app. See Calendar's year-to-date math.
+      // that weren't logged in the app. See Dashboard's year-to-date math.
+      // ytdBaselineDate marks the date ytdBaseline was accurate as of, so
+      // YTD keeps accumulating correctly across pay periods rather than
+      // resetting every time a new period starts.
       ytdBaseline: 0,
+      ytdBaselineDate: todayISO(),
       previousYearTotal: 0,
-      displayName: ''
+      displayName: '',
+      // Up to two earnings goals (Settings > Goals), shown as progress bars
+      // on the Dashboard. Each: { type: '' | 'payPeriod' | 'month' | 'year', amount: number }.
+      goals: [{ type: '', amount: 0 }, { type: '', amount: 0 }],
+      // Collapse state for each rate group's "Edit sites individually" toggle
+      // (js/manual-entry.js), keyed by group id. Missing/false = collapsed.
+      expandedRateGroups: {},
+      hideDollarAmounts: false
     }
   };
 }

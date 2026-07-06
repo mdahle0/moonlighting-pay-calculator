@@ -1,6 +1,6 @@
 {
-  "name": "Moonlighting",
-  "short_name": "Moonlighting",
+  "name": "VISN 9 Moonlighting",
+  "short_name": "VISN 9 Moon",
   "description": "Track per-diem shifts and calculate pay by pay period.",
   "start_url": "./index.html",
   "scope": "./",
