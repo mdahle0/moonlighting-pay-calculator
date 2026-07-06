@@ -7,10 +7,10 @@ if ('serviceWorker' in navigator) {
 
 // Light/dark toggle — a device-level UI preference, stored locally rather
 // than synced per-account. Applied synchronously in <head> to avoid a flash;
-// this just keeps the icon and any later toggle in sync with that.
+// this just keeps the icon and any later toggle in sync with that. Dark is
+// the default regardless of OS preference unless the user has toggled to light.
 function currentTheme() {
-  return document.documentElement.getAttribute('data-theme') ||
-    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  return document.documentElement.getAttribute('data-theme') || 'dark';
 }
 
 function applyThemeIcon() {
