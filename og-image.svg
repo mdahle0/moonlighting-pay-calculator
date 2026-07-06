@@ -1,0 +1,21 @@
+<svg viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1c2b4a"/>
+      <stop offset="1" stop-color="#0a72e8"/>
+    </linearGradient>
+    <mask id="crescent">
+      <rect width="1200" height="630" fill="black"/>
+      <circle cx="600" cy="255" r="128" fill="white"/>
+      <circle cx="660" cy="205" r="108" fill="black"/>
+    </mask>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="600" cy="255" r="128" fill="#fdf6e3" mask="url(#crescent)"/>
+  <circle cx="484" cy="149" r="7" fill="#ffffff" opacity="0.9"/>
+  <circle cx="722" cy="339" r="5" fill="#ffffff" opacity="0.75"/>
+  <circle cx="462" cy="329" r="4" fill="#ffffff" opacity="0.6"/>
+  <circle cx="724" cy="139" r="4" fill="#ffffff" opacity="0.55"/>
+  <text x="600" y="470" font-family="-apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif" font-size="64" font-weight="700" fill="#ffffff" text-anchor="middle">Moonlighting</text>
+  <text x="600" y="515" font-family="-apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif" font-size="26" fill="#c9d9f2" text-anchor="middle">Track shifts and pay across every site</text>
+</svg>

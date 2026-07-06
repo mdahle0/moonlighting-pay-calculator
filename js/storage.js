@@ -58,8 +58,12 @@ function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
 
+// A few exam types are CT-based but don't have "CT" in their abbreviation
+// (e.g. LCS — lung cancer screening — is performed via low-dose CT).
+const CT_LIKE_EXAM_TYPES = new Set(['LCS']);
+
 function isCTExamType(examType) {
-  return /ct/i.test(examType);
+  return /ct/i.test(examType) || CT_LIKE_EXAM_TYPES.has(examType);
 }
 
 // Stable sort: CT-related exam types (CT, LDCT, CT Runoff, etc.) always
