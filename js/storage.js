@@ -36,6 +36,10 @@ function defaultData() {
       apiKey: '',
       periodType: 'biweekly',
       periodAnchor: '2026-06-28',
+      // Manual true-up figures (Settings > Yearly totals), for months/weeks
+      // that weren't logged in the app. See Calendar's year-to-date math.
+      ytdBaseline: 0,
+      previousYearTotal: 0,
       displayName: ''
     }
   };

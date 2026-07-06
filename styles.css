@@ -105,6 +105,20 @@ main { flex: 1; padding: 16px; }
 .breakdown-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; color: var(--muted); }
 .breakdown-row span:last-child { color: var(--text); font-weight: 500; }
 
+.stat-row { display: flex; gap: 12px; margin-bottom: 20px; }
+.stat-card {
+  flex: 1;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+}
+.stat-total { font-size: 20px; font-weight: 700; margin-top: 2px; }
+#lastYearCard { margin-top: 20px; }
+.compare-line { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.compare-line.ahead { color: var(--accent); }
+.compare-line.behind { color: var(--danger); }
+
 /* Calendar */
 .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .calendar-header h2 { margin: 0; }
