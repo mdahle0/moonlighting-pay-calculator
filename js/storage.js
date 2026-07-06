@@ -1,0 +1,281 @@
+// Data model + persistence (localStorage). Everything else reads/writes through Store.
+const STORAGE_KEY = 'moonlighting.v1';
+
+function defaultData() {
+  return {
+    rateGroups: {
+      louisville: {
+        name: 'Louisville',
+        rates: { 'LDCT': 90, 'CT': 105, 'CT (multi)': 125, 'CT Runoff': 200, 'MR': 125, 'US': 50, 'XR': 20, 'DEXA': 30 }
+      },
+      other: {
+        name: 'Memphis / Mountain Home / Lexington / Tennessee Valley',
+        rates: { 'LCS': 100, 'CT': 65, 'MR': 85, 'US': 50, 'XR': 20 }
+      }
+    },
+    sites: [
+      { id: 'louisville', name: 'Louisville', rateGroupId: 'louisville' },
+      { id: 'memphis', name: 'Memphis', rateGroupId: 'other' },
+      { id: 'knoxville', name: 'Mountain Home (Knoxville)', rateGroupId: 'other' },
+      { id: 'lexington', name: 'Lexington', rateGroupId: 'other' },
+      { id: 'tennessee-valley', name: 'Tennessee Valley (Nashville)', rateGroupId: 'other' }
+    ],
+    entries: [],
+    schemaVersion: 3,
+    examLabels: {
+      'LDCT': 'Low-dose CT',
+      'CT (multi)': 'Multiphase CT',
+      'CT Runoff': 'CT runoff (vascular)',
+      'XR': 'X-ray',
+      'MR': 'MRI',
+      'LCS': 'Lung cancer screening / lung cancer screener',
+      'US': 'Ultrasound',
+      'DEXA': 'Bone density (DEXA) scan'
+    },
+    settings: {
+      apiKey: '',
+      periodType: 'biweekly',
+      periodAnchor: todayISO()
+    }
+  };
+}
+
+function todayISO() {
+  const d = new Date();
+  return isoDate(d);
+}
+
+function isoDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function uid() {
+  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+}
+
+const Store = {
+  data: null,
+
+  load() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      try {
+        this.data = JSON.parse(raw);
+      } catch (e) {
+        this.data = defaultData();
+      }
+    } else {
+      this.data = defaultData();
+    }
+    const priorSchemaVersion = this.data.schemaVersion || 0;
+
+    // Fill in any missing top-level keys for forward compatibility
+    const d = defaultData();
+    for (const k of Object.keys(d)) {
+      if (!(k in this.data)) this.data[k] = d[k];
+    }
+    // One-time migration: the old placeholder "Other Sites" bucket becomes the
+    // three actual sites (Memphis, Knoxville, Lexington), all on the same rate group.
+    const placeholderIdx = this.data.sites.findIndex(s => s.id === 'other' && s.name === 'Other Sites');
+    if (placeholderIdx !== -1) {
+      this.data.sites.splice(placeholderIdx, 1,
+        { id: 'memphis', name: 'Memphis', rateGroupId: 'other' },
+        { id: 'knoxville', name: 'Knoxville (Mountain Home)', rateGroupId: 'other' },
+        { id: 'lexington', name: 'Lexington', rateGroupId: 'other' }
+      );
+      if (this.data.rateGroups.other && this.data.rateGroups.other.name === 'Other Sites') {
+        this.data.rateGroups.other.name = 'Memphis / Knoxville / Lexington';
+      }
+      this.save();
+    }
+    // One-time migration (schema v2): add Tennessee Valley to that same group.
+    if (priorSchemaVersion < 2) {
+      if (!this.data.sites.some(s => s.name === 'Tennessee Valley' || s.name === 'Tennessee Valley (Nashville)')) {
+        this.data.sites.push({ id: 'tennessee-valley', name: 'Tennessee Valley (Nashville)', rateGroupId: 'other' });
+      }
+      this.data.schemaVersion = 2;
+      this.save();
+    }
+    // One-time migration (schema v3): rename sites to their clearer forms.
+    // Only touches names that still match the old defaults exactly, so a
+    // deliberate rename by the user is left alone.
+    if (priorSchemaVersion < 3) {
+      const knoxville = this.data.sites.find(s => s.id === 'knoxville' && s.name === 'Knoxville (Mountain Home)');
+      if (knoxville) knoxville.name = 'Mountain Home (Knoxville)';
+      const tennesseeValley = this.data.sites.find(s => s.id === 'tennessee-valley' && s.name === 'Tennessee Valley');
+      if (tennesseeValley) tennesseeValley.name = 'Tennessee Valley (Nashville)';
+      this.data.schemaVersion = 3;
+      this.save();
+    }
+    return this.data;
+  },
+
+  save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+  },
+
+  // ---- Sites & rate groups ----
+  getSites() {
+    return this.data.sites;
+  },
+  // Sites toggled off in Settings are kept (for past entries and easy
+  // re-enabling) but excluded from anywhere you'd log new work.
+  getActiveSites() {
+    return this.data.sites.filter(s => s.active !== false);
+  },
+  getSite(id) {
+    return this.data.sites.find(s => s.id === id);
+  },
+  getRateGroup(id) {
+    return this.data.rateGroups[id];
+  },
+  examTypesForSite(siteId) {
+    const site = this.getSite(siteId);
+    if (!site) return [];
+    const group = this.getRateGroup(site.rateGroupId);
+    const groupTypes = group ? Object.keys(group.rates) : [];
+    const overrideTypes = site.rateOverrides ? Object.keys(site.rateOverrides) : [];
+    return [...new Set([...groupTypes, ...overrideTypes])];
+  },
+  // A site's own rate, if it has an override for this exam type, otherwise
+  // falls back to its rate group's shared rate.
+  rateFor(siteId, examType) {
+    const site = this.getSite(siteId);
+    if (!site) return null;
+    if (site.rateOverrides && examType in site.rateOverrides) return site.rateOverrides[examType];
+    const group = this.getRateGroup(site.rateGroupId);
+    if (!group) return null;
+    return group.rates[examType] ?? null;
+  },
+  groupRateFor(rateGroupId, examType) {
+    const group = this.getRateGroup(rateGroupId);
+    return group ? (group.rates[examType] ?? null) : null;
+  },
+  siteHasOverrides(siteId) {
+    const site = this.getSite(siteId);
+    return !!(site && site.rateOverrides && Object.keys(site.rateOverrides).length > 0);
+  },
+  setSiteRateOverride(siteId, examType, rate) {
+    const site = this.getSite(siteId);
+    if (!site) return;
+    if (!site.rateOverrides) site.rateOverrides = {};
+    site.rateOverrides[examType] = rate;
+    this.save();
+  },
+  clearSiteRateOverride(siteId, examType) {
+    const site = this.getSite(siteId);
+    if (!site || !site.rateOverrides) return;
+    delete site.rateOverrides[examType];
+    this.save();
+  },
+  addSite(name, rateGroupId) {
+    const id = uid();
+    this.data.sites.push({ id, name, rateGroupId });
+    this.save();
+    return id;
+  },
+  updateSite(id, patch) {
+    const site = this.getSite(id);
+    if (!site) return;
+    Object.assign(site, patch);
+    this.save();
+  },
+  removeSite(id) {
+    this.data.sites = this.data.sites.filter(s => s.id !== id);
+    this.save();
+  },
+  addRateGroup(name) {
+    const id = uid();
+    this.data.rateGroups[id] = { name, rates: {} };
+    this.save();
+    return id;
+  },
+  updateRateGroupName(id, name) {
+    if (!this.data.rateGroups[id]) return;
+    this.data.rateGroups[id].name = name;
+    this.save();
+  },
+  setRate(groupId, examType, rate) {
+    const group = this.data.rateGroups[groupId];
+    if (!group) return;
+    group.rates[examType] = rate;
+    this.save();
+  },
+  removeExamType(groupId, examType) {
+    const group = this.data.rateGroups[groupId];
+    if (!group) return;
+    delete group.rates[examType];
+    this.save();
+  },
+  removeRateGroup(id) {
+    delete this.data.rateGroups[id];
+    this.data.sites = this.data.sites.filter(s => s.rateGroupId !== id);
+    this.save();
+  },
+
+  // ---- Exam type glossary (full names / synonyms, used in the UI and to help the chatbot) ----
+  allKnownExamTypes() {
+    const types = new Set(Object.keys(this.data.examLabels));
+    for (const group of Object.values(this.data.rateGroups)) {
+      for (const t of Object.keys(group.rates)) types.add(t);
+    }
+    return [...types];
+  },
+  getExamLabel(examType) {
+    return this.data.examLabels[examType] || '';
+  },
+  setExamLabel(examType, label) {
+    if (label) {
+      this.data.examLabels[examType] = label;
+    } else {
+      delete this.data.examLabels[examType];
+    }
+    this.save();
+  },
+
+  // ---- Entries ----
+  addEntry(entry) {
+    entry.id = uid();
+    this.data.entries.push(entry);
+    this.save();
+    return entry.id;
+  },
+  updateEntry(id, patch) {
+    const e = this.data.entries.find(e => e.id === id);
+    if (!e) return;
+    Object.assign(e, patch);
+    this.save();
+  },
+  removeEntry(id) {
+    this.data.entries = this.data.entries.filter(e => e.id !== id);
+    this.save();
+  },
+  entriesForDate(dateISO) {
+    return this.data.entries.filter(e => e.date === dateISO);
+  },
+  entriesForDateSite(dateISO, siteName) {
+    return this.data.entries.filter(e => e.date === dateISO && e.site === siteName);
+  },
+  setDayForSite(dateISO, siteName, lineItems) {
+    this.data.entries = this.data.entries.filter(e => !(e.date === dateISO && e.site === siteName));
+    for (const item of lineItems) {
+      this.data.entries.push({ id: uid(), date: dateISO, site: siteName, ...item });
+    }
+    this.save();
+  },
+  entriesInRange(startISO, endISO) {
+    return this.data.entries.filter(e => e.date >= startISO && e.date <= endISO);
+  },
+  totalForDate(dateISO) {
+    return this.entriesForDate(dateISO).reduce((sum, e) => sum + e.amount, 0);
+  },
+
+  // ---- Settings ----
+  getSettings() {
+    return this.data.settings;
+  },
+  updateSettings(patch) {
+    Object.assign(this.data.settings, patch);
+    this.save();
+  }
+};

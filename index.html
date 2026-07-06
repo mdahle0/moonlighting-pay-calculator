@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Moonlighting</title>
+<link rel="icon" type="image/svg+xml" href="icon.svg" />
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-title" content="Moonlighting" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <nav id="tabbar">
+      <button class="tab-btn" data-tab="calendar">Calendar</button>
+      <button class="tab-btn active" data-tab="log">Log a day</button>
+      <button class="tab-btn" data-tab="settings">Settings</button>
+    </nav>
+
+    <main>
+      <section id="tab-calendar" class="tab-panel">
+        <div class="period-card" id="periodCard"></div>
+
+        <div class="calendar-header">
+          <button id="prevMonth" class="icon-btn" aria-label="Previous month">&#8249;</button>
+          <h2 id="monthLabel"></h2>
+          <button id="nextMonth" class="icon-btn" aria-label="Next month">&#8250;</button>
+        </div>
+        <div class="weekday-row">
+          <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+        </div>
+        <div id="calendarGrid" class="calendar-grid"></div>
+      </section>
+
+      <section id="tab-log" class="tab-panel active">
+        <h2>Log a day</h2>
+
+        <div class="card">
+          <h3>Tell me what you did</h3>
+          <p class="muted">Speak or type what you did, for one day or a whole pay period. I'll figure out the entries — you confirm before anything is saved.</p>
+          <div class="chat-input-row">
+            <button id="micBtn" class="mic-btn" aria-label="Record voice">&#127908;</button>
+            <textarea id="chatText" rows="3" placeholder="e.g. Today at Louisville I did 8 CTs, 2 ultrasounds, and one CT runoff."></textarea>
+          </div>
+          <div class="chat-actions">
+            <span id="micStatus" class="muted"></span>
+            <button id="parseBtn" class="primary-btn">Parse</button>
+          </div>
+          <p class="dictation-tip muted">Tip: for the most reliable voice-to-text on a Mac, click in the box above and press your Dictation key (often <kbd>fn</kbd> <kbd>fn</kbd>, or Edit &#9656; Start Dictation) to use macOS's built-in dictation instead of the mic button.</p>
+          <div id="chatError" class="error-msg"></div>
+          <div id="reviewArea"></div>
+        </div>
+
+        <div class="card">
+          <h3>Add manually</h3>
+          <p class="muted">Fill in a count for each exam type you did that day, at any site &mdash; leave the rest blank.</p>
+          <form id="manualForm">
+            <label class="date-strip-label">Date (current pay period)</label>
+            <div id="manualDateStrip" class="date-strip"></div>
+            <div id="manualSitesContainer"></div>
+            <div class="day-add-total">Day total: <strong id="manualDayTotal">$0.00</strong></div>
+            <button type="submit" class="primary-btn">Save day</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="tab-settings" class="tab-panel">
+        <h2>Settings</h2>
+
+        <div class="card">
+          <h3>Chatbot (Claude API)</h3>
+          <p class="muted">Used only to parse your spoken/typed log entries. Get a key at console.anthropic.com. Stored only on this Mac.</p>
+          <label>API key
+            <input type="password" id="apiKeyInput" placeholder="sk-ant-..." />
+          </label>
+        </div>
+
+        <div class="card">
+          <h3>Pay period</h3>
+          <div class="form-row">
+            <label>Type
+              <select id="periodType">
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Every 2 weeks</option>
+              </select>
+            </label>
+            <label>Period start (any past cycle start date)
+              <input type="date" id="periodAnchor" />
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Sites &amp; rates</h3>
+          <p class="muted">Sites in the same rate group always pay the same per exam type.</p>
+          <div id="sitesList"></div>
+          <button id="addSiteBtn" class="secondary-btn">+ Add site</button>
+        </div>
+
+        <div class="card">
+          <h3>Rate groups</h3>
+          <div id="rateGroupsList"></div>
+          <button id="addRateGroupBtn" class="secondary-btn">+ Add rate group</button>
+        </div>
+
+        <div class="card">
+          <h3>Exam type meanings</h3>
+          <p class="muted">Full names help the chatbot understand what you mean when you say things like "low dose CT" or "MRI" instead of the abbreviation.</p>
+          <div id="examLabelsList"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="dayModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="dayModalTitle"></h3>
+        <button id="closeDayModal" class="icon-btn" aria-label="Close">&times;</button>
+      </div>
+      <div id="dayModalBody"></div>
+    </div>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/calendar.js"></script>
+  <script src="js/manual-entry.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

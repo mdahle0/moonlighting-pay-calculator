@@ -1,0 +1,32 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1c2b4a"/>
+      <stop offset="1" stop-color="#0a72e8"/>
+    </linearGradient>
+    <linearGradient id="tail" x1="120" y1="400" x2="330" y2="185" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.95"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <path d="M132 402
+           C 175 372, 232 330, 275 288
+           C 296 267, 312 247, 322 228
+           L 340 236
+           C 332 259, 316 283, 293 308
+           C 250 355, 195 388, 152 415
+           Z" fill="url(#tail)"/>
+  <circle cx="176" cy="392" r="5" fill="#ffffff" opacity="0.55"/>
+  <circle cx="205" cy="368" r="4" fill="#ffffff" opacity="0.45"/>
+  <path d="M338 150
+           C 342 175, 351 194, 366 208
+           C 351 219, 342 238, 338 263
+           C 334 238, 325 219, 310 208
+           C 325 194, 334 175, 338 150 Z" fill="#ffffff"/>
+  <path d="M406 218
+           C 408 228, 413 236, 421 242
+           C 413 247, 408 255, 406 265
+           C 404 255, 399 247, 391 242
+           C 399 236, 404 228, 406 218 Z" fill="#ffffff" opacity="0.85"/>
+</svg>
