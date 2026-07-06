@@ -160,7 +160,7 @@ const Settings = {
 
   renderOverridePanel(site) {
     const group = Store.getRateGroup(site.rateGroupId);
-    const examTypes = group ? Object.keys(group.rates) : [];
+    const examTypes = group ? Store.orderedExamTypes(site.rateGroupId) : [];
     if (!examTypes.length) {
       return '<div class="override-panel"><p class="muted">This site\'s rate group has no exam types yet.</p></div>';
     }
@@ -192,13 +192,23 @@ const Settings = {
     const groups = Store.data.rateGroups;
 
     list.innerHTML = Object.entries(groups).map(([groupId, group]) => {
-      const rateRows = Object.entries(group.rates).map(([examType, rate]) => `
+      const examOrder = Store.orderedExamTypes(groupId);
+      const rateRows = examOrder.map((examType, idx) => {
+        const rate = group.rates[examType];
+        const canMoveUp = idx > 0 && isCTExamType(examOrder[idx - 1]) === isCTExamType(examType);
+        const canMoveDown = idx < examOrder.length - 1 && isCTExamType(examOrder[idx + 1]) === isCTExamType(examType);
+        return `
         <div class="rate-row" data-exam="${escapeHtml(examType)}">
+          <div class="reorder-btns">
+            <button type="button" class="icon-btn move-exam-up" aria-label="Move up" ${canMoveUp ? '' : 'disabled'}>&uarr;</button>
+            <button type="button" class="icon-btn move-exam-down" aria-label="Move down" ${canMoveDown ? '' : 'disabled'}>&darr;</button>
+          </div>
           <span class="exam-name">${escapeHtml(examType)}</span>
           <input type="number" class="rate-value" min="0" step="0.01" value="${rate}" />
           <button class="icon-btn remove-exam" aria-label="Remove exam type">&times;</button>
         </div>
-      `).join('');
+      `;
+      }).join('');
 
       const sitesUsingGroup = Store.getSites().filter(s => s.rateGroupId === groupId);
       const sitesLine = sitesUsingGroup.length
@@ -251,6 +261,16 @@ const Settings = {
           Store.removeExamType(groupId, examType);
           this.renderRateGroups();
           this.renderExamLabels();
+          ManualEntry.refreshSiteOptions();
+        });
+        row.querySelector('.move-exam-up').addEventListener('click', () => {
+          Store.reorderExamType(groupId, examType, 'up');
+          this.renderRateGroups();
+          ManualEntry.refreshSiteOptions();
+        });
+        row.querySelector('.move-exam-down').addEventListener('click', () => {
+          Store.reorderExamType(groupId, examType, 'down');
+          this.renderRateGroups();
           ManualEntry.refreshSiteOptions();
         });
       });

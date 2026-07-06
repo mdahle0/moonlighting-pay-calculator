@@ -361,8 +361,12 @@ hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
 .rate-group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 .rate-group-sites { font-size: 12px; margin: 0 0 10px; }
 .group-name { font-weight: 600; border: none; background: transparent; padding: 4px 0; flex: 1; }
-.rate-row { display: grid; grid-template-columns: 1fr 100px auto; gap: 8px; align-items: center; padding: 4px 0; }
+.rate-row { display: grid; grid-template-columns: auto 1fr 100px auto; gap: 8px; align-items: center; padding: 4px 0; }
 .exam-name { font-size: 13px; }
+.reorder-btns { display: flex; flex-direction: column; gap: 2px; }
+.reorder-btns .icon-btn { width: 22px; height: 18px; font-size: 12px; }
+.reorder-btns .icon-btn:disabled { opacity: 0.25; cursor: default; }
+.reorder-btns .icon-btn:disabled:hover { background: none; color: var(--muted); }
 .add-exam-row { display: grid; grid-template-columns: 1fr 90px auto; gap: 8px; margin-top: 10px; }
 .exam-label-row { grid-template-columns: 110px 1fr; }
 .exam-label-row .exam-name { font-weight: 600; }
