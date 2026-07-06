@@ -270,12 +270,13 @@ body.hide-amounts .money { filter: blur(6px); user-select: none; }
 }
 .date-chip-dow { font-size: 10px; color: var(--muted); text-transform: uppercase; }
 .date-chip-num { font-size: 14px; font-weight: 600; }
+.date-chip-amt { font-size: 10px; font-weight: 700; color: var(--accent); }
 .date-chip.today { border-color: var(--accent); border-width: 2px; }
 .date-chip.payday { background: var(--payday-bg); }
 .date-chip.holiday { background: var(--holiday-bg); }
 .date-chip.payday.holiday { background: linear-gradient(135deg, var(--payday-bg) 50%, var(--holiday-bg) 50%); }
 .date-chip.selected { background: var(--accent); border-color: var(--accent); }
-.date-chip.selected .date-chip-dow, .date-chip.selected .date-chip-num { color: white; }
+.date-chip.selected .date-chip-dow, .date-chip.selected .date-chip-num, .date-chip.selected .date-chip-amt { color: white; }
 .exam-grid { margin: 4px 0 12px; }
 .exam-grid-row {
   display: grid;
@@ -290,6 +291,7 @@ body.hide-amounts .money { filter: blur(6px); user-select: none; }
 .exam-grid-rate, .exam-grid-amount { font-size: 12px; text-align: right; }
 .exam-grid-count { width: 100%; padding: 6px 8px; font-size: 13px; }
 .day-add-total { text-align: right; font-size: 13px; margin: 6px 0 12px; }
+.save-status { display: inline-block; min-width: 60px; margin-left: 8px; font-size: 12px; }
 
 @media (max-width: 480px) {
   .exam-grid-row { grid-template-columns: 1.4fr 0.6fr 0.7fr; }
