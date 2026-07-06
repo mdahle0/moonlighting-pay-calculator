@@ -21,68 +21,34 @@ const Calendar = {
   },
 
   render() {
-    this.renderPeriodCard();
+    Dashboard.render();
     this.renderMonth();
-    this.renderYearSummary();
-  },
-
-  renderPeriodCard() {
-    const { start, end } = currentPeriodBounds();
-    const entries = Store.entriesInRange(start, end);
-    const total = entries.reduce((s, e) => s + e.amount, 0);
-    const bySite = {};
-    for (const e of entries) {
-      bySite[e.site] = (bySite[e.site] || 0) + e.amount;
-    }
-    const breakdown = Object.entries(bySite)
-      .sort((a, b) => b[1] - a[1])
-      .map(([site, amt]) => `<div class="breakdown-row"><span>${escapeHtml(site)}</span><span>${fmtMoney(amt)}</span></div>`)
-      .join('');
-
-    document.getElementById('periodCard').innerHTML = `
-      <div class="period-top">
-        <div>
-          <div class="period-label">Current pay period</div>
-          <div class="period-range">${fmtDateHuman(start)} &ndash; ${fmtDateHuman(end)}</div>
-        </div>
-        <div class="period-total">${fmtMoney(total)}</div>
-      </div>
-      ${breakdown ? `<div class="breakdown">${breakdown}</div>` : ''}
-    `;
+    this.renderSecondaryStats();
   },
 
   // Month-to-date is purely what's logged in the app this calendar month.
-  // Year-to-date adds the current period's logged entries on top of the
-  // manually-maintained baseline (Settings > Yearly totals), since months
-  // logged before that baseline was last updated are already folded into it.
-  renderYearSummary() {
+  // Kept alongside last year's total (manual, Settings > Yearly totals) as a
+  // secondary card below the Dashboard — Calendar-tab-only.
+  renderSecondaryStats() {
     const settings = Store.getSettings();
     const todayStr = todayISO();
 
     const mtdTotal = Store.entriesInRange(startOfMonthISO(), todayStr)
       .reduce((s, e) => s + e.amount, 0);
-
-    const { start: periodStart } = currentPeriodBounds();
-    const yearStart = startOfYearISO();
-    const ytdEntriesStart = periodStart < yearStart ? yearStart : periodStart;
-    const periodToDateTotal = Store.entriesInRange(ytdEntriesStart, todayStr)
-      .reduce((s, e) => s + e.amount, 0);
-    const ytdTotal = (settings.ytdBaseline || 0) + periodToDateTotal;
-
     const lastYearTotal = settings.previousYearTotal || 0;
 
     document.getElementById('mtdTotal').textContent = fmtMoney(mtdTotal);
-    document.getElementById('ytdTotal').textContent = fmtMoney(ytdTotal);
     document.getElementById('lastYearTotal').textContent = fmtMoney(lastYearTotal);
 
     const compareEl = document.getElementById('yearCompare');
     if (lastYearTotal > 0) {
+      const ytdTotal = Dashboard.computeYTD();
       const paceTarget = lastYearTotal * monthsElapsedFraction();
       const diff = ytdTotal - paceTarget;
       const pct = paceTarget > 0 ? (Math.abs(diff) / paceTarget) * 100 : 0;
       const aheadBehind = diff >= 0 ? 'ahead of' : 'behind';
-      compareEl.textContent =
-        `Year to date is ${fmtMoney(Math.abs(diff))} (${pct.toFixed(1)}%) ${aheadBehind} last year's pace through this point (${fmtMoney(paceTarget)}).`;
+      compareEl.innerHTML =
+        `Year to date is <span class="money">${fmtMoney(Math.abs(diff))}</span> (${pct.toFixed(1)}%) ${aheadBehind} last year's pace through this point (<span class="money">${fmtMoney(paceTarget)}</span>).`;
       compareEl.className = 'compare-line ' + (diff >= 0 ? 'ahead' : 'behind');
     } else {
       compareEl.textContent = 'Enter last year\'s total in Settings to see a pace comparison.';
@@ -101,6 +67,10 @@ const Calendar = {
     const firstDay = new Date(y, m, 1).getDay();
     const daysInMonth = new Date(y, m + 1, 0).getDate();
     const todayStr = todayISO();
+    const monthStartISO = `${y}-${String(m + 1).padStart(2, '0')}-01`;
+    const monthEndISO = `${y}-${String(m + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+    const paydays = paydaysInRange(monthStartISO, monthEndISO);
+    const holidays = federalHolidaysForYear(y);
 
     for (let i = 0; i < firstDay; i++) {
       const blank = document.createElement('div');
@@ -112,10 +82,12 @@ const Calendar = {
       const dateISO = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const total = Store.totalForDate(dateISO);
       const cell = document.createElement('div');
-      cell.className = 'day-cell' + (dateISO === todayStr ? ' today' : '') + (total > 0 ? ' has-entries' : '');
+      cell.className = 'day-cell' + (dateISO === todayStr ? ' today' : '') + (total > 0 ? ' has-entries' : '')
+        + dayMarkerClass(dateISO, paydays, holidays);
       cell.innerHTML = `
         <span class="day-num">${day}</span>
-        ${total > 0 ? `<span class="day-amt">${fmtMoney(total, true)}</span>` : ''}
+        ${dayBadgesHtml(dateISO, paydays, holidays)}
+        ${total > 0 ? `<span class="day-amt money">${fmtMoney(total, true)}</span>` : ''}
       `;
       cell.addEventListener('click', () => this.openDayModal(dateISO));
       grid.appendChild(cell);
@@ -145,14 +117,14 @@ const Calendar = {
           <span class="entry-site">${escapeHtml(e.site)}</span>
           <span class="entry-exam">${escapeHtml(e.examType)} &times; ${e.count}</span>
         </div>
-        <div class="entry-amt">${fmtMoney(e.amount)}</div>
+        <div class="entry-amt money">${fmtMoney(e.amount)}</div>
         <button class="icon-btn delete-entry" aria-label="Delete">&times;</button>
       </div>
     `).join('');
 
     body.innerHTML = `
       ${entries.length ? `<div class="entry-list">${rows}</div>` : '<p class="muted">No entries yet for this day.</p>'}
-      ${entries.length ? `<div class="entry-total">Day total: <strong>${fmtMoney(total)}</strong></div>` : ''}
+      ${entries.length ? `<div class="entry-total">Day total: <strong class="money">${fmtMoney(total)}</strong></div>` : ''}
       <hr/>
       <form id="dayAddForm" class="day-add-form">
         <div class="form-row">
@@ -287,6 +259,108 @@ function monthsElapsedFraction() {
 function parseISO(s) {
   const [y, m, d] = s.split('-').map(Number);
   return new Date(y, m - 1, d);
+}
+
+// ---- Payday & VA federal holiday markers (Calendar grid + Log a day date-strip) ----
+
+// The nth occurrence of a weekday in a month (n=1..5, dow=0 Sun..6 Sat).
+function nthWeekdayOfMonth(year, month, dow, n) {
+  const first = new Date(year, month, 1);
+  const day = 1 + ((dow - first.getDay() + 7) % 7) + (n - 1) * 7;
+  return new Date(year, month, day);
+}
+
+// The last occurrence of a weekday in a month (e.g. Memorial Day).
+function lastWeekdayOfMonth(year, month, dow) {
+  const last = new Date(year, month + 1, 0);
+  const day = last.getDate() - ((last.getDay() - dow + 7) % 7);
+  return new Date(year, month, day);
+}
+
+// Federal weekend-shift rule: Saturday observed the Friday before, Sunday
+// observed the Monday after. Only applies to the fixed-date holidays below —
+// the floating ones (nth-weekday, last-weekday) always land on a weekday.
+function observedDate(d) {
+  const dow = d.getDay();
+  if (dow === 6) return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
+  if (dow === 0) return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+  return d;
+}
+
+function federalHolidaysForYear(year) {
+  return {
+    [isoDate(observedDate(new Date(year, 0, 1)))]: "New Year's Day",
+    [isoDate(nthWeekdayOfMonth(year, 0, 1, 3))]: 'Martin Luther King Jr. Day',
+    [isoDate(nthWeekdayOfMonth(year, 1, 1, 3))]: "Washington's Birthday",
+    [isoDate(lastWeekdayOfMonth(year, 4, 1))]: 'Memorial Day',
+    [isoDate(observedDate(new Date(year, 5, 19)))]: 'Juneteenth',
+    [isoDate(observedDate(new Date(year, 6, 4)))]: 'Independence Day',
+    [isoDate(nthWeekdayOfMonth(year, 8, 1, 1))]: 'Labor Day',
+    [isoDate(nthWeekdayOfMonth(year, 9, 1, 2))]: 'Columbus Day',
+    [isoDate(observedDate(new Date(year, 10, 11)))]: 'Veterans Day',
+    [isoDate(nthWeekdayOfMonth(year, 10, 4, 4))]: 'Thanksgiving',
+    [isoDate(observedDate(new Date(year, 11, 25)))]: 'Christmas Day'
+  };
+}
+
+// First Friday strictly after the given date (if the date itself is a
+// Friday, payday is the *following* Friday, 7 days later, not the same day).
+function nextFridayAfter(dateISO) {
+  const d = parseISO(dateISO);
+  const dow = d.getDay();
+  let daysToAdd = (5 - dow + 7) % 7;
+  if (daysToAdd === 0) daysToAdd = 7;
+  return isoDate(new Date(d.getFullYear(), d.getMonth(), d.getDate() + daysToAdd));
+}
+
+// Every pay period's payday (the Friday after its end) that falls within
+// [startISO, endISO] — works for any month, not just the current period,
+// by walking the same anchor/length cycle math as currentPeriodBounds().
+function paydaysInRange(startISO, endISO) {
+  const settings = Store.getSettings();
+  const lengthDays = settings.periodType === 'weekly' ? 7 : 14;
+  const anchor = startOfDay(parseISO(settings.periodAnchor || todayISO()));
+  const msPerDay = 86400000;
+  const rangeStart = parseISO(startISO).getTime();
+  const rangeEnd = parseISO(endISO).getTime();
+
+  const paydays = new Set();
+  let k = Math.floor((rangeStart - anchor.getTime()) / msPerDay / lengthDays) - 2;
+  while (true) {
+    const periodStart = new Date(anchor.getTime() + k * lengthDays * msPerDay);
+    const periodEnd = new Date(periodStart.getTime() + (lengthDays - 1) * msPerDay);
+    const payday = parseISO(nextFridayAfter(isoDate(periodEnd)));
+    if (payday.getTime() > rangeEnd + 7 * msPerDay) break;
+    if (payday.getTime() >= rangeStart && payday.getTime() <= rangeEnd) {
+      paydays.add(isoDate(payday));
+    }
+    k++;
+  }
+  return paydays;
+}
+
+// CSS class(es) for the day's background tint: green for payday, red for a
+// holiday, or both (diagonally split via CSS) if it's both — e.g. a holiday
+// that lands on the payday Friday.
+function dayMarkerClass(dateISO, paydays, holidays) {
+  const isPayday = paydays.has(dateISO);
+  const isHoliday = !!holidays[dateISO];
+  if (isPayday && isHoliday) return ' payday holiday';
+  if (isPayday) return ' payday';
+  if (isHoliday) return ' holiday';
+  return '';
+}
+
+function dayBadgesHtml(dateISO, paydays, holidays) {
+  const holidayName = holidays[dateISO];
+  const isPayday = paydays.has(dateISO);
+  if (!isPayday && !holidayName) return '';
+  return `
+    <div class="day-badges">
+      ${isPayday ? '<span class="day-badge" title="Payday">💵</span>' : ''}
+      ${holidayName ? `<span class="day-badge" title="${escapeHtml(holidayName)}">🎌</span>` : ''}
+    </div>
+  `;
 }
 
 function fmtMoney(n, compact) {

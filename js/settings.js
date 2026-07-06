@@ -44,7 +44,13 @@ const Settings = {
     const ytdBaselineInput = document.getElementById('ytdBaselineInput');
     ytdBaselineInput.value = settings.ytdBaseline || '';
     ytdBaselineInput.addEventListener('change', () => {
-      Store.updateSettings({ ytdBaseline: parseFloat(ytdBaselineInput.value) || 0 });
+      // Every time the baseline dollar figure is edited, it's the user
+      // asserting "as of today, my YTD is $X" — so the date it's accurate
+      // as of moves to today too. See storage.js's ytdBaselineDate comment.
+      Store.updateSettings({
+        ytdBaseline: parseFloat(ytdBaselineInput.value) || 0,
+        ytdBaselineDate: todayISO()
+      });
       Calendar.render();
     });
 
@@ -53,6 +59,16 @@ const Settings = {
     previousYearTotalInput.addEventListener('change', () => {
       Store.updateSettings({ previousYearTotal: parseFloat(previousYearTotalInput.value) || 0 });
       Calendar.render();
+    });
+
+    this.wireGoalInput(1, settings);
+    this.wireGoalInput(2, settings);
+
+    const hideAmountsToggle = document.getElementById('hideAmountsToggle');
+    hideAmountsToggle.checked = !!settings.hideDollarAmounts;
+    hideAmountsToggle.addEventListener('change', () => {
+      Store.updateSettings({ hideDollarAmounts: hideAmountsToggle.checked });
+      applyHideAmounts();
     });
 
     document.getElementById('addSiteBtn').addEventListener('click', () => this.addSite());
@@ -68,6 +84,25 @@ const Settings = {
     const header = document.getElementById('profileHeader');
     header.textContent = name ? `Hi, ${name}` : '';
     header.style.display = name ? '' : 'none';
+  },
+
+  // Goal slots are a fixed 2-element array (Settings > Goals); slotNum is 1 or 2.
+  wireGoalInput(slotNum, settings) {
+    const idx = slotNum - 1;
+    const goal = (settings.goals && settings.goals[idx]) || { type: '', amount: 0 };
+    const typeSel = document.getElementById(`goal${slotNum}Type`);
+    const amountInput = document.getElementById(`goal${slotNum}Amount`);
+    typeSel.value = goal.type || '';
+    amountInput.value = goal.amount || '';
+
+    const save = () => {
+      const goals = [...(Store.getSettings().goals || [{ type: '', amount: 0 }, { type: '', amount: 0 }])];
+      goals[idx] = { type: typeSel.value, amount: parseFloat(amountInput.value) || 0 };
+      Store.updateSettings({ goals });
+      Calendar.render();
+    };
+    typeSel.addEventListener('change', save);
+    amountInput.addEventListener('change', save);
   },
 
   expandedOverrides: new Set(),
