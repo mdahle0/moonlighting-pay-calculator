@@ -29,6 +29,19 @@ const ManualEntry = {
       setTimeout(() => { btn.textContent = original; }, 900);
     });
 
+    document.getElementById('clearDayBtn').addEventListener('click', () => {
+      const dateISO = this.selectedDate;
+      if (!Store.entriesForDate(dateISO).length) return;
+      const ok = window.confirm(`Clear all logged entries for ${fmtDateHuman(dateISO, true)}? This can't be undone.`);
+      if (!ok) return;
+      clearTimeout(this.saveTimer);
+      this.saveTimer = null;
+      Store.clearDay(dateISO);
+      this.renderGrid();
+      this.renderDateStrip();
+      Calendar.render();
+    });
+
     this.renderDateStrip();
     this.renderGrid();
   },
@@ -208,15 +221,33 @@ const ManualEntry = {
     }).join('');
   },
 
+  // The itemized grid above only covers sites/groups currently rendered as
+  // rows. Anything saved for this date under a name that isn't one of those
+  // (a "Quick total" entry, or a leftover entry for a site that's since been
+  // deactivated) wouldn't be reflected in that sum — which used to make this
+  // total silently disagree with the day's total shown on the calendar/date
+  // strip. Folding it in here (and calling it out in a note) keeps this
+  // number always equal to what's shown everywhere else.
   refreshTotal() {
     const container = document.getElementById('manualSitesContainer');
-    let total = 0;
+    let itemizedTotal = 0;
     container.querySelectorAll('.exam-grid-row').forEach(row => {
       const rate = parseFloat(row.dataset.rate);
       const count = parseInt(row.querySelector('.exam-grid-count').value, 10) || 0;
-      total += rate * count;
+      itemizedTotal += rate * count;
     });
-    document.getElementById('manualDayTotal').textContent = fmtMoney(total);
+
+    const renderedSiteNames = new Set(
+      [...container.querySelectorAll('.site-section')].map(s => s.dataset.siteName)
+    );
+    const outsideTotal = Store.entriesForDate(this.selectedDate)
+      .filter(e => !renderedSiteNames.has(e.site))
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    document.getElementById('manualDayTotal').textContent = fmtMoney(itemizedTotal + outsideTotal);
+    document.getElementById('manualQuickTotalNote').textContent = outsideTotal > 0
+      ? `Includes ${fmtMoney(outsideTotal)} logged outside this grid (e.g. a quick total below).`
+      : '';
   },
 
   // Debounced auto-save: waits for a pause in typing so counts aren't
