@@ -80,12 +80,12 @@
 
         <h2>Log a day</h2>
 
-        <div class="card">
+        <div class="card chat-card">
           <h3>Tell me what you did</h3>
           <p class="muted">Speak or type what you did, for one day or a whole pay period. I'll figure out the entries — you confirm before anything is saved.</p>
           <div class="chat-input-row">
             <button id="micBtn" class="mic-btn" aria-label="Record voice">&#127908;</button>
-            <textarea id="chatText" rows="3" placeholder="e.g. Today at Louisville I did 8 CTs, 2 ultrasounds, and one CT runoff."></textarea>
+            <textarea id="chatText" rows="2" placeholder="e.g. Today at Louisville I did 8 CTs, 2 ultrasounds, and one CT runoff."></textarea>
           </div>
           <div class="chat-actions">
             <span id="micStatus" class="muted"></span>
@@ -96,7 +96,7 @@
           <div id="reviewArea"></div>
         </div>
 
-        <div class="card">
+        <div class="card manual-card">
           <h3>Add manually</h3>
           <p class="muted">Fill in a count for each exam type you did that day, at any site &mdash; leave the rest blank.</p>
           <form id="manualForm">
