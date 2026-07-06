@@ -74,6 +74,12 @@
       <section id="tab-settings" class="tab-panel">
         <h2>Settings</h2>
 
+        <div class="card" id="accountCard" style="display: none;">
+          <h3>Account</h3>
+          <p class="muted">Logged in as <strong id="accountEmail"></strong></p>
+          <button id="logoutBtn" class="secondary-btn">Log out</button>
+        </div>
+
         <div class="card">
           <h3>Chatbot (Claude API)</h3>
           <p class="muted">Used only to parse your spoken/typed log entries. Get a key at console.anthropic.com. Stored only on this Mac.</p>
@@ -129,7 +135,29 @@
     </div>
   </div>
 
+  <div id="authModal" class="modal-overlay open">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Moonlighting</h3>
+      </div>
+      <form id="authForm">
+        <label>Email
+          <input type="email" id="authEmail" required autocomplete="email" />
+        </label>
+        <label>Password
+          <input type="password" id="authPassword" required autocomplete="current-password" minlength="6" />
+        </label>
+        <div id="authError" class="error-msg"></div>
+        <button type="submit" id="authSubmitBtn" class="primary-btn">Log in</button>
+        <p><a href="#" id="authToggleMode">Need an account? Sign up</a></p>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase-config.js"></script>
   <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/calendar.js"></script>
   <script src="js/manual-entry.js"></script>
   <script src="js/chat.js"></script>
