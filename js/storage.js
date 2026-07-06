@@ -35,7 +35,7 @@ function defaultData() {
     settings: {
       apiKey: '',
       periodType: 'biweekly',
-      periodAnchor: todayISO()
+      periodAnchor: '2026-06-28'
     }
   };
 }
