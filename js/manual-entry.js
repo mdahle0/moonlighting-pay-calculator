@@ -17,14 +17,9 @@ const ManualEntry = {
       const input = document.getElementById('logQuickTotalAmount');
       const amount = parseFloat(input.value);
       if (!amount || amount <= 0) return;
-      Store.addEntry({
-        date: this.selectedDate,
-        site: 'Quick total',
-        examType: 'Day total',
-        count: 1,
-        rate: amount,
-        amount
-      });
+      Store.setDayForSite(this.selectedDate, 'Quick total', [
+        { examType: 'Day total', count: 1, rate: amount, amount }
+      ]);
       input.value = '';
       Calendar.render();
       this.renderDateStrip();
@@ -144,9 +139,14 @@ const ManualEntry = {
     const bodyHtml = expanded
       ? group.sites.map(s => this.renderSiteSection(s, dateISO, true)).join('')
       : this.renderCombinedSection(group, dateISO);
+    // Every name this group's entries could be saved under (the combined
+    // "Other" bucket, or each site individually) — used on save to clear
+    // whichever name isn't currently displayed, so switching between
+    // collapsed/expanded views can't leave stale entries behind.
+    const altNames = encodeURIComponent(JSON.stringify(['Other', ...group.sites.map(s => s.name)]));
 
     return `
-      <div class="group-section" data-group-id="${group.groupId}">
+      <div class="group-section" data-group-id="${group.groupId}" data-alt-names="${altNames}">
         <div class="group-section-header">
           <span class="group-section-title">Other</span>
           <button type="button" class="link-btn group-toggle-btn" data-group-id="${group.groupId}">${toggleLabel}</button>
@@ -239,9 +239,7 @@ const ManualEntry = {
   persistDay() {
     const dateISO = this.selectedDate;
     const container = document.getElementById('manualSitesContainer');
-
-    container.querySelectorAll('.site-section').forEach(section => {
-      const siteName = section.dataset.siteName;
+    const readSection = (section) => {
       const lineItems = [];
       section.querySelectorAll('.exam-grid-row').forEach(row => {
         const count = parseInt(row.querySelector('.exam-grid-count').value, 10);
@@ -250,7 +248,24 @@ const ManualEntry = {
           lineItems.push({ examType: row.dataset.exam, count, rate, amount: rate * count });
         }
       });
-      Store.setDayForSite(dateISO, siteName, lineItems);
+      return lineItems;
+    };
+
+    // Grouped sites: clear every alternate name the group could have been
+    // saved under (see renderGroupSection) before writing the currently
+    // displayed mode's entries, so toggling collapsed/expanded can't double-count.
+    container.querySelectorAll('.group-section').forEach(groupEl => {
+      const altNames = JSON.parse(decodeURIComponent(groupEl.dataset.altNames));
+      const sections = [...groupEl.querySelectorAll('.site-section')].map(section => ({
+        siteName: section.dataset.siteName,
+        lineItems: readSection(section)
+      }));
+      Store.replaceDayEntries(dateISO, altNames, sections);
+    });
+
+    // Single-site groups and rate-override sites — no alternate name to worry about.
+    container.querySelectorAll(':scope > .site-section').forEach(section => {
+      Store.setDayForSite(dateISO, section.dataset.siteName, readSection(section));
     });
 
     Calendar.render();

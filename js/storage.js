@@ -395,9 +395,20 @@ const Store = {
     return this.data.entries.filter(e => e.date === dateISO && e.site === siteName);
   },
   setDayForSite(dateISO, siteName, lineItems) {
-    this.data.entries = this.data.entries.filter(e => !(e.date === dateISO && e.site === siteName));
-    for (const item of lineItems) {
-      this.data.entries.push({ id: uid(), date: dateISO, site: siteName, ...item });
+    this.replaceDayEntries(dateISO, [siteName], [{ siteName, lineItems }]);
+  },
+  // Replaces a day's entries across every possible name a group of sites
+  // could have been saved under (e.g. a rate group's combined "Other" bucket
+  // vs. each site's own name when expanded), so toggling between the
+  // collapsed/expanded view can't leave stale entries behind under the name
+  // that isn't currently displayed — which was silently double-counting the
+  // day's total.
+  replaceDayEntries(dateISO, clearNames, sections) {
+    this.data.entries = this.data.entries.filter(e => !(e.date === dateISO && clearNames.includes(e.site)));
+    for (const { siteName, lineItems } of sections) {
+      for (const item of lineItems) {
+        this.data.entries.push({ id: uid(), date: dateISO, site: siteName, ...item });
+      }
     }
     this.save();
   },

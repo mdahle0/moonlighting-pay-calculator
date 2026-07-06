@@ -207,14 +207,9 @@ const Calendar = {
       const input = document.getElementById('quickTotalAmount');
       const amount = parseFloat(input.value);
       if (!amount || amount <= 0) return;
-      Store.addEntry({
-        date: dateISO,
-        site: 'Quick total',
-        examType: 'Day total',
-        count: 1,
-        rate: amount,
-        amount
-      });
+      Store.setDayForSite(dateISO, 'Quick total', [
+        { examType: 'Day total', count: 1, rate: amount, amount }
+      ]);
       this.renderDayModalBody(dateISO);
     });
   }
