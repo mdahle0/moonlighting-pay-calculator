@@ -418,6 +418,13 @@ const Store = {
   totalForDate(dateISO) {
     return this.entriesForDate(dateISO).reduce((sum, e) => sum + e.amount, 0);
   },
+  // Removes every entry for a date across every site (itemized, "Other",
+  // Quick total, everything) so a day can be reset in one action instead of
+  // clearing each site/quick-total bucket separately.
+  clearDay(dateISO) {
+    this.data.entries = this.data.entries.filter(e => e.date !== dateISO);
+    this.save();
+  },
 
   // ---- Settings ----
   getSettings() {
