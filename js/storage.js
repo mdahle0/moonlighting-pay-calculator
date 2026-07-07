@@ -38,11 +38,12 @@ function defaultData() {
       periodAnchor: '2026-06-28',
       // Manual true-up figures (Settings > Yearly totals), for months/weeks
       // that weren't logged in the app. See Dashboard's year-to-date math.
-      // ytdBaselineDate marks the date ytdBaseline was accurate as of, so
-      // YTD keeps accumulating correctly across pay periods rather than
-      // resetting every time a new period starts.
+      // ytdBaselineDate is the *last day already included* in ytdBaseline —
+      // entries are summed starting the day after it, so it defaults to
+      // yesterday (not today) so a fresh account's very first day of
+      // logged entries still counts toward YTD from day one.
       ytdBaseline: 0,
-      ytdBaselineDate: todayISO(),
+      ytdBaselineDate: yesterdayISO(),
       previousYearTotal: 0,
       displayName: '',
       // Up to two earnings goals (Settings > Goals), shown as progress bars
@@ -58,6 +59,12 @@ function defaultData() {
 
 function todayISO() {
   const d = new Date();
+  return isoDate(d);
+}
+
+function yesterdayISO() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
   return isoDate(d);
 }
 
