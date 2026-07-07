@@ -143,10 +143,22 @@ const ManualEntry = {
       const amountEl = row.querySelector('.exam-grid-amount');
       countInput.addEventListener('input', () => {
         const count = parseInt(countInput.value, 10);
-        amountEl.textContent = count > 0 ? fmtMoney(rate * count) : '';
+        amountEl.textContent = count > 0 ? fmtMoney(rate * count, true) : '';
         this.refreshTotal();
         this.scheduleAutoSave();
       });
+
+      // +/- buttons adjust the same input and fire its 'input' event, so
+      // they go through the exact same amount-refresh/autosave path above
+      // instead of duplicating it.
+      const step = (delta) => {
+        const current = parseInt(countInput.value, 10) || 0;
+        const next = Math.max(0, current + delta);
+        countInput.value = next === 0 ? '' : next;
+        countInput.dispatchEvent(new Event('input', { bubbles: true }));
+      };
+      row.querySelector('.stepper-minus').addEventListener('click', () => step(-1));
+      row.querySelector('.stepper-plus').addEventListener('click', () => step(1));
     });
 
     this.refreshTotal();
@@ -221,10 +233,17 @@ const ManualEntry = {
       const label = Store.getExamLabel(examType);
       return `
         <div class="exam-grid-row" data-exam="${escapeHtml(examType)}" data-rate="${rate}">
-          <span class="exam-grid-name">${escapeHtml(examType)}${label ? `<span class="exam-grid-aka">${escapeHtml(label)}</span>` : ''}</span>
-          <span class="exam-grid-rate muted">${fmtMoney(rate)}</span>
-          <input type="number" class="exam-grid-count" min="0" step="1" placeholder="0" value="${count}" />
-          <span class="exam-grid-amount muted">${count ? fmtMoney(rate * count) : ''}</span>
+          <span class="exam-grid-name">
+            <span class="exam-grid-name-text">${escapeHtml(examType)}</span>
+            ${label ? `<span class="exam-grid-aka">${escapeHtml(label)}</span>` : ''}
+          </span>
+          <span class="exam-grid-rate muted">${fmtMoney(rate, true)}</span>
+          <div class="stepper">
+            <button type="button" class="stepper-btn stepper-minus" aria-label="Remove one ${escapeHtml(examType)}">&minus;</button>
+            <input type="number" class="exam-grid-count" min="0" step="1" placeholder="0" value="${count}" inputmode="numeric" />
+            <button type="button" class="stepper-btn stepper-plus" aria-label="Add one ${escapeHtml(examType)}">+</button>
+          </div>
+          <span class="exam-grid-amount muted">${count ? fmtMoney(rate * count, true) : ''}</span>
         </div>
       `;
     }).join('');
