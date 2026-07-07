@@ -41,16 +41,23 @@ const Settings = {
       ManualEntry.refreshDateStrip();
     });
 
+    // The baseline amount and the date it's accurate "as of" are edited
+    // independently now — auto-stamping the date to today (whenever the
+    // amount was edited) was wrong whenever someone updates this a few days
+    // after the period actually ended (e.g. on payday rather than the
+    // period's end date), which created a gap of unaccounted-for entries
+    // between the true period-end date and whenever the field got updated.
     const ytdBaselineInput = document.getElementById('ytdBaselineInput');
+    const ytdBaselineDateInput = document.getElementById('ytdBaselineDateInput');
     ytdBaselineInput.value = settings.ytdBaseline || '';
+    ytdBaselineDateInput.value = settings.ytdBaselineDate || '';
+
     ytdBaselineInput.addEventListener('change', () => {
-      // Every time the baseline dollar figure is edited, it's the user
-      // asserting "as of today, my YTD is $X" — so the date it's accurate
-      // as of moves to today too. See storage.js's ytdBaselineDate comment.
-      Store.updateSettings({
-        ytdBaseline: parseFloat(ytdBaselineInput.value) || 0,
-        ytdBaselineDate: todayISO()
-      });
+      Store.updateSettings({ ytdBaseline: parseFloat(ytdBaselineInput.value) || 0 });
+      Calendar.render();
+    });
+    ytdBaselineDateInput.addEventListener('change', () => {
+      Store.updateSettings({ ytdBaselineDate: ytdBaselineDateInput.value || todayISO() });
       Calendar.render();
     });
 

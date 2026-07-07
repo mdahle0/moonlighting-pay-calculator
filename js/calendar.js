@@ -282,6 +282,23 @@ function observedDate(d) {
   return d;
 }
 
+// A distinct emoji per holiday instead of one generic marker — 🎌 read as a
+// national flag (and specifically got mistaken for Japan's), so each holiday
+// now gets its own unambiguous icon instead.
+const HOLIDAY_EMOJI = {
+  "New Year's Day": '🎉',
+  'Martin Luther King Jr. Day': '🕊️',
+  "Washington's Birthday": '🏛️',
+  'Memorial Day': '🇺🇸',
+  'Juneteenth': '✊',
+  'Independence Day': '🎆',
+  'Labor Day': '🛠️',
+  'Columbus Day': '🧭',
+  'Veterans Day': '🎖️',
+  'Thanksgiving': '🦃',
+  'Christmas Day': '🎄'
+};
+
 function federalHolidaysForYear(year) {
   return {
     [isoDate(observedDate(new Date(year, 0, 1)))]: "New Year's Day",
@@ -350,10 +367,11 @@ function dayBadgesHtml(dateISO, paydays, holidays) {
   const holidayName = holidays[dateISO];
   const isPayday = paydays.has(dateISO);
   if (!isPayday && !holidayName) return '';
+  const holidayEmoji = holidayName ? (HOLIDAY_EMOJI[holidayName] || '🎉') : '';
   return `
     <div class="day-badges">
       ${isPayday ? '<span class="day-badge" title="Payday">💵</span>' : ''}
-      ${holidayName ? `<span class="day-badge" title="${escapeHtml(holidayName)}">🎌</span>` : ''}
+      ${holidayName ? `<span class="day-badge" title="${escapeHtml(holidayName)}">${holidayEmoji}</span>` : ''}
     </div>
   `;
 }

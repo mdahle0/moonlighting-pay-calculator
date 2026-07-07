@@ -1,4 +1,4 @@
-const CACHE_NAME = 'moonlighting-v15';
+const CACHE_NAME = 'moonlighting-v16';
 const PRECACHE_URLS = [
   './',
   './index.html',
