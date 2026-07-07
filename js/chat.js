@@ -102,6 +102,10 @@ const Chat = {
     });
   },
 
+  // Tries the free local parser first (no network, no API key). Falls back
+  // to Claude only when local parsing finds nothing AND a key is configured
+  // — local parsing handles the common phrasing for free, Claude picks up
+  // the harder/unusual cases for anyone who's added a key.
   async parse() {
     const errorEl = document.getElementById('chatError');
     const reviewArea = document.getElementById('reviewArea');
@@ -115,9 +119,26 @@ const Chat = {
       errorEl.textContent = 'Say or type what you did first.';
       return;
     }
+
+    const local = LocalParser.parse(text);
+    if (local.status === 'clarify') {
+      this.renderClarification(local, text);
+      return;
+    }
+    if (local.status === 'entries') {
+      this.renderReview(local.entries);
+      if (local.warnings && local.warnings.length) {
+        errorEl.textContent = local.warnings.join(' ');
+      }
+      return;
+    }
+
+    // Nothing recognized locally.
     const apiKey = Store.getSettings().apiKey;
     if (!apiKey) {
-      errorEl.textContent = 'Add your Claude API key in Settings first.';
+      errorEl.textContent = (local.warnings && local.warnings.length)
+        ? local.warnings.join(' ')
+        : "Couldn't recognize that. Try rephrasing, use Add manually below, or add a Claude API key in Settings for smarter parsing.";
       return;
     }
 
@@ -134,6 +155,29 @@ const Chat = {
       parseBtn.disabled = false;
       parseBtn.textContent = 'Parse';
     }
+  },
+
+  // Shows a yes/no-style prompt for something the local parser can't safely
+  // guess (currently just fluoro rad-presence). Picking an option rewrites
+  // the ambiguous phrase in place and re-parses, so the rest of the message
+  // (other sites/exam types) still gets picked up normally.
+  renderClarification(result, text) {
+    const reviewArea = document.getElementById('reviewArea');
+    reviewArea.innerHTML = `
+      <div class="clarify-box">
+        <p>${escapeHtml(result.question)}</p>
+        <div class="clarify-choices">
+          ${result.choices.map((c, i) => `<button type="button" class="secondary-btn clarify-choice" data-idx="${i}">${escapeHtml(c.label)}</button>`).join('')}
+        </div>
+      </div>
+    `;
+    reviewArea.querySelectorAll('.clarify-choice').forEach((btn, i) => {
+      btn.addEventListener('click', () => {
+        const newText = result.choices[i].apply(text);
+        document.getElementById('chatText').value = newText;
+        this.parse();
+      });
+    });
   },
 
   async callClaude(text, apiKey) {

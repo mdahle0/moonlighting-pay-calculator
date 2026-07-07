@@ -163,11 +163,14 @@ const ManualEntry = {
     // whichever name isn't currently displayed, so switching between
     // collapsed/expanded views can't leave stale entries behind.
     const altNames = encodeURIComponent(JSON.stringify(['Other', ...group.sites.map(s => s.name)]));
+    // group.sites is already active-sites-only (see renderGrid), so this
+    // reflects exactly what's currently toggled on.
+    const groupLabel = group.sites.map(s => s.name).join(' / ') || 'Other';
 
     return `
       <div class="group-section" data-group-id="${group.groupId}" data-alt-names="${altNames}">
         <div class="group-section-header">
-          <span class="group-section-title">Other</span>
+          <span class="group-section-title">${escapeHtml(groupLabel)}</span>
           <button type="button" class="link-btn group-toggle-btn" data-group-id="${group.groupId}">${toggleLabel}</button>
         </div>
         ${bodyHtml}

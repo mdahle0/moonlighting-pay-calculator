@@ -1,4 +1,4 @@
-const CACHE_NAME = 'moonlighting-v9';
+const CACHE_NAME = 'moonlighting-v10';
 const PRECACHE_URLS = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const PRECACHE_URLS = [
   './js/calendar.js',
   './js/dashboard.js',
   './js/manual-entry.js',
+  './js/local-parser.js',
   './js/chat.js',
   './js/settings.js',
   './js/main.js',

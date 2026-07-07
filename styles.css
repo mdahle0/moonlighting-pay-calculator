@@ -370,6 +370,11 @@ textarea { resize: vertical; width: 100%; }
 .rv-amount { font-size: 13px; font-weight: 600; text-align: right; }
 .review-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
 
+.clarify-box { margin-top: 14px; padding: 12px; background: var(--accent-soft); border-radius: 10px; }
+.clarify-box p { margin: 0 0 10px; font-size: 13px; }
+.clarify-choices { display: flex; gap: 8px; flex-wrap: wrap; }
+.clarify-choices .clarify-choice { font-size: 12px; }
+
 /* Day modal */
 .modal-overlay {
   display: none;
