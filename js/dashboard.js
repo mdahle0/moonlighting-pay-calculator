@@ -86,7 +86,7 @@ const Dashboard = {
     const goalsHtml = data.goalResults.length ? `<div class="goals-row">${goalRows}</div>` : '';
 
     const breakdownHtml = data.siteBreakdown.map(([site, amt]) =>
-      `<div class="breakdown-row"><span>${escapeHtml(site)}</span><span class="money">${fmtMoney(amt)}</span></div>`
+      `<div class="breakdown-row"><span>${escapeHtml(site === 'Other' ? otherGroupLabel() : site)}</span><span class="money">${fmtMoney(amt)}</span></div>`
     ).join('');
 
     return `

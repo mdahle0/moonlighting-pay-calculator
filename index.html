@@ -82,7 +82,7 @@
 
         <div class="card chat-card">
           <h3>Tell me what you did</h3>
-          <p class="muted">Speak or type what you did, for one day or a whole pay period. I'll figure out the entries — you confirm before anything is saved.</p>
+          <p class="muted">Speak or type what you did for a day — works free, no setup needed. I'll figure out the entries and you confirm before anything is saved. Add a Claude API key in Settings for smarter parsing (multiple days at once, more flexible phrasing).</p>
           <div class="chat-input-row">
             <button id="micBtn" class="mic-btn" aria-label="Record voice">&#127908;</button>
             <textarea id="chatText" rows="2" placeholder="e.g. Today at Louisville I did 8 CTs, 2 ultrasounds, and one CT runoff."></textarea>
@@ -139,8 +139,8 @@
         </div>
 
         <div class="card">
-          <h3>Chatbot (Claude API)</h3>
-          <p class="muted">Used only to parse your spoken/typed log entries. Get a key at console.anthropic.com. Stored only on this Mac.</p>
+          <h3>Chatbot (Claude API) — optional</h3>
+          <p class="muted">"Tell me what you did" already works for free without this. Adding a key here upgrades it to handle trickier phrasing and messages spanning multiple days. Get a key at console.anthropic.com. Syncs with your account like everything else.</p>
           <label>API key
             <input type="password" id="apiKeyInput" placeholder="sk-ant-..." />
           </label>
@@ -274,6 +274,7 @@
   <script src="js/calendar.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/manual-entry.js"></script>
+  <script src="js/local-parser.js"></script>
   <script src="js/chat.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/main.js"></script>

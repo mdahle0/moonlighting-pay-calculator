@@ -395,3 +395,22 @@ function populateExamTypeSelect(sel, siteId, selectedType) {
   }).join('');
   if (selectedType && types.includes(selectedType)) sel.value = selectedType;
 }
+
+// The combined-entry bucket for a multi-site rate group is always saved
+// under the literal site name "Other" (see manual-entry.js), but should be
+// *displayed* as the active sites it actually covers — e.g. "Memphis /
+// Mountain Home (Knoxville) / Lexington" once Tennessee Valley is toggled
+// off, rather than a static "Other" that doesn't reflect what's active.
+function otherGroupLabel() {
+  const byGroup = {};
+  for (const site of Store.getSites()) {
+    (byGroup[site.rateGroupId] ||= []).push(site);
+  }
+  for (const sites of Object.values(byGroup)) {
+    if (sites.length > 1) {
+      const activeNames = sites.filter(s => s.active !== false).map(s => s.name);
+      return activeNames.length ? activeNames.join(' / ') : 'Other';
+    }
+  }
+  return 'Other';
+}
