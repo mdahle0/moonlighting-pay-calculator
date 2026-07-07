@@ -143,7 +143,7 @@ const ManualEntry = {
       const amountEl = row.querySelector('.exam-grid-amount');
       countInput.addEventListener('input', () => {
         const count = parseInt(countInput.value, 10);
-        amountEl.textContent = count > 0 ? fmtMoney(rate * count) : '';
+        amountEl.textContent = count > 0 ? fmtMoney(rate * count, true) : '';
         this.refreshTotal();
         this.scheduleAutoSave();
       });
@@ -237,13 +237,13 @@ const ManualEntry = {
             <span class="exam-grid-name-text">${escapeHtml(examType)}</span>
             ${label ? `<span class="exam-grid-aka">${escapeHtml(label)}</span>` : ''}
           </span>
-          <span class="exam-grid-rate muted">${fmtMoney(rate)}</span>
+          <span class="exam-grid-rate muted">${fmtMoney(rate, true)}</span>
           <div class="stepper">
             <button type="button" class="stepper-btn stepper-minus" aria-label="Remove one ${escapeHtml(examType)}">&minus;</button>
             <input type="number" class="exam-grid-count" min="0" step="1" placeholder="0" value="${count}" inputmode="numeric" />
             <button type="button" class="stepper-btn stepper-plus" aria-label="Add one ${escapeHtml(examType)}">+</button>
           </div>
-          <span class="exam-grid-amount muted">${count ? fmtMoney(rate * count) : ''}</span>
+          <span class="exam-grid-amount muted">${count ? fmtMoney(rate * count, true) : ''}</span>
         </div>
       `;
     }).join('');

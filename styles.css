@@ -292,8 +292,8 @@ body.hide-amounts .money { filter: blur(6px); user-select: none; }
 .exam-grid-name { flex: 1 1 auto; min-width: 0; font-size: 12px; font-weight: 500; display: flex; flex-direction: column; }
 .exam-grid-name-text, .exam-grid-aka { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .exam-grid-aka { font-size: 10px; font-weight: 400; color: var(--muted); }
-.exam-grid-rate { font-size: 11px; color: var(--muted); flex-shrink: 0; width: 34px; text-align: right; }
-.exam-grid-amount { font-size: 12px; font-weight: 600; flex-shrink: 0; width: 46px; text-align: right; }
+.exam-grid-rate { font-size: 11px; color: var(--muted); flex-shrink: 0; width: 38px; text-align: right; white-space: nowrap; }
+.exam-grid-amount { font-size: 12px; font-weight: 600; flex-shrink: 0; width: 42px; text-align: right; white-space: nowrap; }
 
 /* Stepper: bigger tap targets than a bare number input's native spinner,
    sized to still fit on the same line as the exam name/rate/amount. */
