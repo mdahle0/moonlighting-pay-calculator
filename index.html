@@ -80,7 +80,11 @@
 
         <h2>Log a day</h2>
 
-        <div class="card chat-card">
+        <!-- "Tell me what you did" (voice/text parsing) — hidden for now,
+             not fully working yet. Code is untouched (js/chat.js,
+             js/local-parser.js); remove style="display:none" below to
+             bring it back. -->
+        <div class="card chat-card" style="display: none;">
           <h3>Tell me what you did</h3>
           <p class="muted">Speak or type what you did for a day — works free, no setup needed. I'll figure out the entries and you confirm before anything is saved. Add a Claude API key in Settings for smarter parsing (multiple days at once, more flexible phrasing).</p>
           <div class="chat-input-row">
