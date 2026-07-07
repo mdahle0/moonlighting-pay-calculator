@@ -169,9 +169,14 @@
           <h3>Yearly totals</h3>
           <p class="muted">Use these to true up the Calendar page's totals if some weeks or months weren't logged in the app.</p>
           <div class="form-row">
-            <label>Year-to-date earnings (before current pay period)
+            <label>Year-to-date earnings as of the date below
               <input type="number" id="ytdBaselineInput" step="0.01" min="0" />
             </label>
+            <label>As of date (last day included in that total — the pay period's end date, not payday)
+              <input type="date" id="ytdBaselineDateInput" />
+            </label>
+          </div>
+          <div class="form-row">
             <label>Last year's total earnings
               <input type="number" id="previousYearTotalInput" step="0.01" min="0" />
             </label>
