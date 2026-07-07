@@ -57,7 +57,7 @@ const Settings = {
       Calendar.render();
     });
     ytdBaselineDateInput.addEventListener('change', () => {
-      Store.updateSettings({ ytdBaselineDate: ytdBaselineDateInput.value || todayISO() });
+      Store.updateSettings({ ytdBaselineDate: ytdBaselineDateInput.value || yesterdayISO() });
       Calendar.render();
     });
 
