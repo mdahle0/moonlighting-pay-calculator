@@ -233,18 +233,17 @@ const ManualEntry = {
       const label = Store.getExamLabel(examType);
       return `
         <div class="exam-grid-row" data-exam="${escapeHtml(examType)}" data-rate="${rate}">
-          <div class="exam-grid-top">
-            <span class="exam-grid-name">${escapeHtml(examType)}${label ? `<span class="exam-grid-aka">${escapeHtml(label)}</span>` : ''}</span>
-            <span class="exam-grid-rate muted">${fmtMoney(rate)}</span>
+          <span class="exam-grid-name">
+            <span class="exam-grid-name-text">${escapeHtml(examType)}</span>
+            ${label ? `<span class="exam-grid-aka">${escapeHtml(label)}</span>` : ''}
+          </span>
+          <span class="exam-grid-rate muted">${fmtMoney(rate)}</span>
+          <div class="stepper">
+            <button type="button" class="stepper-btn stepper-minus" aria-label="Remove one ${escapeHtml(examType)}">&minus;</button>
+            <input type="number" class="exam-grid-count" min="0" step="1" placeholder="0" value="${count}" inputmode="numeric" />
+            <button type="button" class="stepper-btn stepper-plus" aria-label="Add one ${escapeHtml(examType)}">+</button>
           </div>
-          <div class="exam-grid-bottom">
-            <div class="stepper">
-              <button type="button" class="stepper-btn stepper-minus" aria-label="Remove one ${escapeHtml(examType)}">&minus;</button>
-              <input type="number" class="exam-grid-count" min="0" step="1" placeholder="0" value="${count}" inputmode="numeric" />
-              <button type="button" class="stepper-btn stepper-plus" aria-label="Add one ${escapeHtml(examType)}">+</button>
-            </div>
-            <span class="exam-grid-amount muted">${count ? fmtMoney(rate * count) : ''}</span>
-          </div>
+          <span class="exam-grid-amount muted">${count ? fmtMoney(rate * count) : ''}</span>
         </div>
       `;
     }).join('');

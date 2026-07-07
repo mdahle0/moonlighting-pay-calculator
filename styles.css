@@ -279,27 +279,34 @@ body.hide-amounts .money { filter: blur(6px); user-select: none; }
 .date-chip.selected .date-chip-dow, .date-chip.selected .date-chip-num, .date-chip.selected .date-chip-amt { color: white; }
 .exam-grid { margin: 4px 0 12px; }
 .exam-grid-row {
-  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
   border-bottom: 1px solid var(--border);
 }
-.exam-grid-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 6px; }
-.exam-grid-bottom { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.exam-grid-name { font-size: 13px; font-weight: 500; display: flex; flex-direction: column; }
-.exam-grid-aka { font-size: 11px; font-weight: 400; color: var(--muted); }
-.exam-grid-rate { font-size: 12px; color: var(--muted); flex-shrink: 0; }
-.exam-grid-amount { font-size: 13px; font-weight: 600; }
+/* Name (+ optional aka) shares the row with rate/stepper/amount, so it's
+   the one flexible column — everything else has a fixed width and this
+   truncates instead, keeping as many exam types on screen at once as
+   possible without wrapping to a second line per row. */
+.exam-grid-name { flex: 1 1 auto; min-width: 0; font-size: 12px; font-weight: 500; display: flex; flex-direction: column; }
+.exam-grid-name-text, .exam-grid-aka { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.exam-grid-aka { font-size: 10px; font-weight: 400; color: var(--muted); }
+.exam-grid-rate { font-size: 11px; color: var(--muted); flex-shrink: 0; width: 34px; text-align: right; }
+.exam-grid-amount { font-size: 12px; font-weight: 600; flex-shrink: 0; width: 46px; text-align: right; }
 
-/* Stepper: bigger tap targets than a bare number input's native spinner. */
-.stepper { display: flex; align-items: center; gap: 8px; }
+/* Stepper: bigger tap targets than a bare number input's native spinner,
+   sized to still fit on the same line as the exam name/rate/amount. */
+.stepper { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .stepper-btn {
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   flex-shrink: 0;
-  border-radius: 8px;
+  border-radius: 7px;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
@@ -309,10 +316,10 @@ body.hide-amounts .money { filter: blur(6px); user-select: none; }
 }
 .stepper-btn:active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .exam-grid-count {
-  width: 40px;
+  width: 26px;
   text-align: center;
-  padding: 4px;
-  font-size: 14px;
+  padding: 2px;
+  font-size: 13px;
   -moz-appearance: textfield;
 }
 .exam-grid-count::-webkit-inner-spin-button, .exam-grid-count::-webkit-outer-spin-button {
