@@ -12,12 +12,17 @@ const Dashboard = {
   // totals) plus everything logged since the date that baseline was last
   // set (ytdBaselineDate) — not since the current pay period started, so it
   // keeps accumulating correctly across any number of future pay periods.
+  //
+  // ytdBaselineDate is the *last day already included* in the baseline
+  // figure, so the "since" sum has to start the day after it — summing from
+  // ytdBaselineDate itself (inclusive) double-counted any entry logged on
+  // that exact date (already inside the baseline, then added again).
   computeYTD() {
     const settings = Store.getSettings();
     const todayStr = todayISO();
     const yearStart = startOfYearISO();
     const baselineDate = settings.ytdBaselineDate || yearStart;
-    const ytdEntriesStart = baselineDate > yearStart ? baselineDate : yearStart;
+    const ytdEntriesStart = baselineDate >= yearStart ? dayAfter(baselineDate) : yearStart;
     const sinceBaseline = Store.entriesInRange(ytdEntriesStart, todayStr)
       .reduce((s, e) => s + e.amount, 0);
     return (settings.ytdBaseline || 0) + sinceBaseline;
@@ -124,4 +129,10 @@ function paceClass(paceText) {
 
 function applyHideAmounts() {
   document.body.classList.toggle('hide-amounts', !!Store.getSettings().hideDollarAmounts);
+}
+
+function dayAfter(dateISO) {
+  const d = parseISO(dateISO);
+  d.setDate(d.getDate() + 1);
+  return isoDate(d);
 }
