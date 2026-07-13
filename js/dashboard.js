@@ -31,25 +31,39 @@ const Dashboard = {
   computeData() {
     const settings = Store.getSettings();
     const todayStr = todayISO();
-    const { start: periodStart, end: periodEnd } = currentPeriodBounds();
+    const current = currentPeriodBounds();
 
-    const periodEntries = Store.entriesInRange(periodStart, periodEnd);
+    const periodEntries = Store.entriesInRange(current.start, current.end);
     const periodTotal = periodEntries.reduce((s, e) => s + e.amount, 0);
     const bySite = {};
     for (const e of periodEntries) bySite[e.site] = (bySite[e.site] || 0) + e.amount;
     const siteBreakdown = Object.entries(bySite).sort((a, b) => b[1] - a[1]);
 
+    // A period's payday always falls a few days into the *next* period (the
+    // Friday after it ends), so right after a period ends but before that
+    // payday has actually happened, the period containing "today" is
+    // already the new one — yet the payday you're waiting on still pays out
+    // the just-finished period, not the barely-started one. Show whichever
+    // period the *next* payday actually pays for.
+    const prev = currentPeriodBounds(dayBefore(current.start));
+    const prevPayday = nextFridayAfter(prev.end);
+    const inPaydayGap = prevPayday >= todayStr;
+    const paydayPeriod = inPaydayGap ? prev : current;
+    const paydayPeriodTotal = inPaydayGap
+      ? Store.entriesInRange(paydayPeriod.start, paydayPeriod.end).reduce((s, e) => s + e.amount, 0)
+      : periodTotal;
+    const payday = nextFridayAfter(paydayPeriod.end);
+    const isPeriodOver = paydayPeriod.end < todayStr;
+
     const mtdTotal = Store.entriesInRange(startOfMonthISO(), todayStr)
       .reduce((s, e) => s + e.amount, 0);
     const ytdTotal = this.computeYTD();
-    const payday = nextFridayAfter(periodEnd);
-    const isPeriodOver = periodEnd < todayStr;
 
     const goalResults = (settings.goals || [])
       .filter(g => g.type)
       .map(g => this.computeGoalResult(g, { periodTotal, mtdTotal, ytdTotal }));
 
-    return { periodTotal, siteBreakdown, payday, isPeriodOver, ytdTotal, goalResults };
+    return { periodTotal, paydayPeriodTotal, siteBreakdown, payday, isPeriodOver, ytdTotal, goalResults };
   },
 
   computeGoalResult(goal, totals) {
@@ -78,8 +92,8 @@ const Dashboard = {
 
   buildHTML(data) {
     const paydayAmt = data.isPeriodOver
-      ? `${fmtMoney(data.periodTotal)} estimated`
-      : `${fmtMoney(data.periodTotal)} and counting`;
+      ? `${fmtMoney(data.paydayPeriodTotal)} estimated`
+      : `${fmtMoney(data.paydayPeriodTotal)} and counting`;
 
     const goalRows = data.goalResults.map(g => `
       <div class="goal-bar-row">
@@ -134,5 +148,11 @@ function applyHideAmounts() {
 function dayAfter(dateISO) {
   const d = parseISO(dateISO);
   d.setDate(d.getDate() + 1);
+  return isoDate(d);
+}
+
+function dayBefore(dateISO) {
+  const d = parseISO(dateISO);
+  d.setDate(d.getDate() - 1);
   return isoDate(d);
 }
