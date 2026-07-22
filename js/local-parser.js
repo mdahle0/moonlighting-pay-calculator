@@ -13,7 +13,7 @@
 const EXAM_TYPE_SYNONYMS = {
   'CT': ['ct', 'cat scan', 'cat-scan', 'catscan', 'ct scan'],
   'LDCT': ['ldct', 'low dose ct', 'low-dose ct', 'lowdose ct', 'low dose', 'low-dose', 'screening ct', 'lung screening ct'],
-  'CT (multi)': ['multiphase ct', 'multi-phase ct', 'multi phase ct', 'triple phase ct', 'three phase ct', 'multiphasic ct'],
+  'CT multiphase or CTA': ['multiphase ct', 'multi-phase ct', 'multi phase ct', 'triple phase ct', 'three phase ct', 'multiphasic ct'],
   // Deliberately no bare "runoff"/"run off" — too easily confused with the
   // ordinary English phrase outside a radiology context.
   'CT Runoff': ['ct runoff', 'ct run-off', 'ct run off', 'cta runoff', 'ct angio runoff', 'lower extremity runoff', 'les runoff'],

@@ -74,6 +74,7 @@ const Dashboard = {
     const met = goal.amount > 0 && current >= goal.amount;
 
     let paceText = null;
+    let paceKind = null;
     if (goal.type === 'year' && goal.amount > 0) {
       const now = new Date();
       const startOfYear = new Date(now.getFullYear(), 0, 1);
@@ -81,13 +82,21 @@ const Dashboard = {
       const y = now.getFullYear();
       const daysInYear = ((y % 4 === 0 && y % 100 !== 0) || y % 400 === 0) ? 366 : 365;
       const expectedYTD = goal.amount * (dayOfYear / daysInYear);
+      const diff = current - expectedYTD;
       const tolerance = expectedYTD * 0.02;
-      if (Math.abs(current - expectedYTD) <= tolerance) paceText = 'On pace';
-      else if (current > expectedYTD) paceText = 'Ahead of pace';
-      else paceText = 'Behind pace';
+      if (Math.abs(diff) <= tolerance) {
+        paceKind = 'on';
+        paceText = 'On pace';
+      } else if (diff > 0) {
+        paceKind = 'ahead';
+        paceText = `Ahead of pace by ${fmtMoney(diff)}`;
+      } else {
+        paceKind = 'behind';
+        paceText = `Behind pace by ${fmtMoney(Math.abs(diff))}`;
+      }
     }
 
-    return { type: goal.type, amount: goal.amount, current, pct, met, paceText };
+    return { type: goal.type, amount: goal.amount, current, pct, met, paceText, paceKind };
   },
 
   buildHTML(data) {
@@ -99,7 +108,7 @@ const Dashboard = {
       <div class="goal-bar-row">
         <div class="goal-bar-label">${goalTypeLabel(g.type)} goal: <span class="money">${fmtMoney(g.current)} / ${fmtMoney(g.amount)}</span></div>
         <div class="goal-bar-track"><div class="goal-bar-fill${g.met ? ' met' : ''}" style="width:${g.pct}%"></div></div>
-        ${g.paceText ? `<div class="goal-pace-text ${paceClass(g.paceText)}">${g.paceText}</div>` : ''}
+        ${g.paceText ? `<div class="goal-pace-text ${paceClass(g.paceKind)}">${g.paceText}</div>` : ''}
       </div>
     `).join('');
     const goalsHtml = data.goalResults.length ? `<div class="goals-row">${goalRows}</div>` : '';
@@ -135,9 +144,9 @@ function goalTypeLabel(type) {
   return { payPeriod: 'Pay period', month: 'Month', year: 'Year' }[type] || '';
 }
 
-function paceClass(paceText) {
-  if (paceText === 'Ahead of pace') return 'ahead';
-  if (paceText === 'Behind pace') return 'behind';
+function paceClass(paceKind) {
+  if (paceKind === 'ahead') return 'ahead';
+  if (paceKind === 'behind') return 'behind';
   return 'on-pace';
 }
 
