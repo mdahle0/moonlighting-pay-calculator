@@ -83,6 +83,7 @@ const Calendar = {
       const total = Store.totalForDate(dateISO);
       const cell = document.createElement('div');
       cell.className = 'day-cell' + (dateISO === todayStr ? ' today' : '') + (total > 0 ? ' has-entries' : '')
+        + (periodParity(dateISO) ? ' period-alt' : '')
         + dayMarkerClass(dateISO, paydays, holidays);
       cell.innerHTML = `
         <span class="day-num">${day}</span>
@@ -231,6 +232,21 @@ function currentPeriodBounds(refDateISO) {
 
 function startOfDay(d) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+// Which of the two alternating pay-period cycles a date falls in (0 or 1),
+// walking the same anchor/length cycle math as currentPeriodBounds() so the
+// parity lines up exactly with real period boundaries — used to tint the
+// Calendar grid so consecutive pay periods are visually distinguishable.
+function periodParity(dateISO) {
+  const settings = Store.getSettings();
+  const lengthDays = settings.periodType === 'weekly' ? 7 : 14;
+  const anchor = parseISO(settings.periodAnchor || todayISO());
+  const ref = parseISO(dateISO);
+  const msPerDay = 86400000;
+  const diffDays = Math.floor((startOfDay(ref) - startOfDay(anchor)) / msPerDay);
+  const cyclesElapsed = Math.floor(diffDays / lengthDays);
+  return ((cyclesElapsed % 2) + 2) % 2;
 }
 
 function startOfMonthISO() {

@@ -193,7 +193,7 @@ const Chat = {
 
     const systemPrompt = `You convert a radiologist's spoken/typed description of moonlighting work into structured log entries.
 Today's date is ${today} (${weekday}). Resolve relative dates ("today", "yesterday", "last Monday", "this past Tuesday and Wednesday") against that.
-Known sites and their valid exam types (use these exact codes, and only these; the "aka" in parentheses is just so you can recognize when the person says the full name or a synonym instead of the code, e.g. "low dose CT" or "low-dose CT" means LDCT, "MRI" means MR, "x-ray" or "xray" means XR, "multiphase CT" or "multi-phase CT" means CT (multi), "lung cancer screening" or "lung cancer screener" means LCS):
+Known sites and their valid exam types (use these exact codes, and only these; the "aka" in parentheses is just so you can recognize when the person says the full name or a synonym instead of the code, e.g. "low dose CT" or "low-dose CT" means LDCT, "MRI" means MR, "x-ray" or "xray" means XR, "multiphase CT" or "multi-phase CT" means CT multiphase or CTA, "lung cancer screening" or "lung cancer screener" means LCS):
 ${JSON.stringify(sites, null, 2)}
 Speech-to-text often mishears "low dose" as similar-sounding words like "lotto", "lettuce", or "lotus" — treat any of those (or other clear phonetic near-misses of "low dose") as meaning "low dose".
 If the person mentions a site not in this list, use their wording for "site" as-is.

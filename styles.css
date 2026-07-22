@@ -11,6 +11,7 @@
   --success: #30d158;
   --payday-bg: #1c3a28;
   --holiday-bg: #3a1c1c;
+  --period-alt-bg: #3a3a3d;
   --radius: 14px;
   color-scheme: dark;
 }
@@ -27,6 +28,7 @@
   --success: #34c759;
   --payday-bg: #e3f6e8;
   --holiday-bg: #fbe4e4;
+  --period-alt-bg: #e6e6e8;
 }
 :root[data-theme="dark"] {
   --bg: #1c1c1e;
@@ -39,6 +41,7 @@
   --success: #30d158;
   --payday-bg: #1c3a28;
   --holiday-bg: #3a1c1c;
+  --period-alt-bg: #3a3a3d;
 }
 
 * { box-sizing: border-box; }
@@ -212,6 +215,7 @@ body.hide-amounts .money { filter: blur(6px); user-select: none; }
 .day-cell:hover { border-color: var(--accent); }
 .day-cell.empty { background: transparent; border: none; cursor: default; }
 .day-cell.today { border-color: var(--accent); border-width: 2px; }
+.day-cell.period-alt { background: var(--period-alt-bg); }
 .day-cell.has-entries { background: var(--accent-soft); }
 .day-cell.payday { background: var(--payday-bg); }
 .day-cell.holiday { background: var(--holiday-bg); }
@@ -259,8 +263,10 @@ body.hide-amounts .money { filter: blur(6px); user-select: none; }
   font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px;
 }
 .date-strip {
-  display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 16px;
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 10px;
 }
+.period-total-repeat { font-size: 13px; color: var(--muted); text-align: right; margin: 0 0 16px; }
+.period-total-repeat strong { color: var(--text); font-weight: 700; }
 .date-chip {
   position: relative;
   padding: 7px 0;

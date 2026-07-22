@@ -93,6 +93,9 @@ const ManualEntry = {
         this.renderGrid();
       });
     });
+
+    const periodTotal = Store.entriesInRange(start, end).reduce((s, e) => s + e.amount, 0);
+    document.getElementById('manualPeriodTotal').textContent = fmtMoney(periodTotal);
   },
 
   renderGrid() {
@@ -177,7 +180,7 @@ const ManualEntry = {
     const altNames = encodeURIComponent(JSON.stringify(['Other', ...group.sites.map(s => s.name)]));
     // group.sites is already active-sites-only (see renderGrid), so this
     // reflects exactly what's currently toggled on.
-    const groupLabel = group.sites.map(s => s.name).join(' / ') || 'Other';
+    const groupLabel = group.sites.map(s => shortSiteName(s.name)).join(' / ') || 'Other';
 
     return `
       <div class="group-section" data-group-id="${group.groupId}" data-alt-names="${altNames}">
@@ -207,7 +210,7 @@ const ManualEntry = {
     const rows = this.buildRowsHtml(examTypes, (t) => Store.rateFor(site.id, t), existingEntries);
     return `
       <div class="site-section" data-site-name="${escapeHtml(site.name)}">
-        ${withTitle ? `<div class="site-section-title">${escapeHtml(site.name)}</div>` : ''}
+        ${withTitle ? `<div class="site-section-title">${escapeHtml(shortSiteName(site.name))}</div>` : ''}
         ${rows}
       </div>
     `;
@@ -362,3 +365,11 @@ const ManualEntry = {
     this.renderGrid();
   }
 };
+
+// Drops a trailing parenthetical (e.g. "Mountain Home (Knoxville)" ->
+// "Mountain Home") for the section titles in the Add manually grid, which
+// are tight on horizontal space — the full name (with its city aka) is
+// still used everywhere the site is saved, matched, or listed in Settings.
+function shortSiteName(name) {
+  return name.replace(/\s*\([^)]*\)\s*$/, '');
+}

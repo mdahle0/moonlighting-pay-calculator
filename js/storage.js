@@ -6,7 +6,7 @@ function defaultData() {
     rateGroups: {
       louisville: {
         name: 'Louisville',
-        rates: { 'LDCT': 90, 'CT': 105, 'CT (multi)': 125, 'CT Runoff': 200, 'MR': 125, 'US': 50, 'XR': 20, 'DEXA': 30 }
+        rates: { 'LDCT': 90, 'CT': 105, 'CT multiphase or CTA': 125, 'CT Runoff': 200, 'MR': 125, 'US': 50, 'XR': 20, 'DEXA': 30 }
       },
       other: {
         name: 'Memphis / Mountain Home / Lexington / Tennessee Valley',
@@ -21,10 +21,9 @@ function defaultData() {
       { id: 'tennessee-valley', name: 'Tennessee Valley (Nashville)', rateGroupId: 'other' }
     ],
     entries: [],
-    schemaVersion: 3,
+    schemaVersion: 4,
     examLabels: {
       'LDCT': 'Low-dose CT',
-      'CT (multi)': 'Multiphase CT',
       'CT Runoff': 'CT runoff (vascular)',
       'XR': 'X-ray',
       'MR': 'MRI',
@@ -183,6 +182,35 @@ const Store = {
       const tennesseeValley = this.data.sites.find(s => s.id === 'tennessee-valley' && s.name === 'Tennessee Valley');
       if (tennesseeValley) tennesseeValley.name = 'Tennessee Valley (Nashville)';
       this.data.schemaVersion = 3;
+    }
+    // One-time migration (schema v4): "CT (multi)" renamed to the clearer
+    // "CT multiphase or CTA", with its separate aka label folded into the
+    // name itself. Renames the exam type everywhere it's used as a key
+    // (rate groups, per-site rate overrides, past entries) so existing data
+    // keeps matching up instead of showing as an orphaned legacy code.
+    if (priorSchemaVersion < 4) {
+      const oldName = 'CT (multi)';
+      const newName = 'CT multiphase or CTA';
+      for (const group of Object.values(this.data.rateGroups)) {
+        if (group.rates && oldName in group.rates) {
+          group.rates[newName] = group.rates[oldName];
+          delete group.rates[oldName];
+        }
+        if (group.examOrder) {
+          group.examOrder = group.examOrder.map(t => t === oldName ? newName : t);
+        }
+      }
+      for (const site of this.data.sites) {
+        if (site.rateOverrides && oldName in site.rateOverrides) {
+          site.rateOverrides[newName] = site.rateOverrides[oldName];
+          delete site.rateOverrides[oldName];
+        }
+      }
+      delete this.data.examLabels[oldName];
+      for (const e of this.data.entries) {
+        if (e.examType === oldName) e.examType = newName;
+      }
+      this.data.schemaVersion = 4;
     }
   },
 
