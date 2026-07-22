@@ -7,6 +7,7 @@
   --muted: #98989d;
   --accent: #409cff;
   --accent-soft: #163350;
+  --accent-soft-alt: #1e4568;
   --danger: #d0342c;
   --success: #30d158;
   --payday-bg: #1c3a28;
@@ -25,6 +26,7 @@
   --muted: #86868b;
   --accent: #0071e3;
   --accent-soft: #e8f2fd;
+  --accent-soft-alt: #cfe3f7;
   --success: #34c759;
   --payday-bg: #e3f6e8;
   --holiday-bg: #fbe4e4;
@@ -38,6 +40,7 @@
   --muted: #98989d;
   --accent: #409cff;
   --accent-soft: #163350;
+  --accent-soft-alt: #1e4568;
   --success: #30d158;
   --payday-bg: #1c3a28;
   --holiday-bg: #3a1c1c;
@@ -217,6 +220,7 @@ body.hide-amounts .money { filter: blur(6px); user-select: none; }
 .day-cell.today { border-color: var(--accent); border-width: 2px; }
 .day-cell.period-alt { background: var(--period-alt-bg); }
 .day-cell.has-entries { background: var(--accent-soft); }
+.day-cell.has-entries-alt { background: var(--accent-soft-alt); }
 .day-cell.payday { background: var(--payday-bg); }
 .day-cell.holiday { background: var(--holiday-bg); }
 .day-cell.payday.holiday { background: linear-gradient(135deg, var(--payday-bg) 50%, var(--holiday-bg) 50%); }

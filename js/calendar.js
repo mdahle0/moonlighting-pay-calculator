@@ -81,9 +81,16 @@ const Calendar = {
     for (let day = 1; day <= daysInMonth; day++) {
       const dateISO = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const total = Store.totalForDate(dateISO);
+      const isAltPeriod = periodParity(dateISO);
+      // Alternating pay periods get their own shade even when a day has
+      // entries — otherwise every worked day renders the same "has-entries"
+      // blue and the period tint (only visible on empty days) disappears
+      // for anyone logging every day.
+      const shadeClass = total > 0
+        ? (isAltPeriod ? ' has-entries-alt' : ' has-entries')
+        : (isAltPeriod ? ' period-alt' : '');
       const cell = document.createElement('div');
-      cell.className = 'day-cell' + (dateISO === todayStr ? ' today' : '') + (total > 0 ? ' has-entries' : '')
-        + (periodParity(dateISO) ? ' period-alt' : '')
+      cell.className = 'day-cell' + (dateISO === todayStr ? ' today' : '') + shadeClass
         + dayMarkerClass(dateISO, paydays, holidays);
       cell.innerHTML = `
         <span class="day-num">${day}</span>
