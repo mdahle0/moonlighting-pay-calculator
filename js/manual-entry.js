@@ -262,10 +262,24 @@ const ManualEntry = {
   refreshTotal() {
     const container = document.getElementById('manualSitesContainer');
     let itemizedTotal = 0;
-    container.querySelectorAll('.exam-grid-row').forEach(row => {
-      const rate = parseFloat(row.dataset.rate);
-      const count = parseInt(row.querySelector('.exam-grid-count').value, 10) || 0;
-      itemizedTotal += rate * count;
+    let studiesTotal = 0;
+    const siteStudyCounts = [];
+    container.querySelectorAll('.site-section').forEach(section => {
+      let sectionCount = 0;
+      section.querySelectorAll('.exam-grid-row').forEach(row => {
+        const rate = parseFloat(row.dataset.rate);
+        const count = parseInt(row.querySelector('.exam-grid-count').value, 10) || 0;
+        itemizedTotal += rate * count;
+        sectionCount += count;
+      });
+      if (sectionCount > 0) {
+        const siteName = section.dataset.siteName;
+        const label = siteName === 'Other'
+          ? otherGroupLabel().split(' / ').map(shortSiteName).join(' / ')
+          : shortSiteName(siteName);
+        siteStudyCounts.push([label, sectionCount]);
+        studiesTotal += sectionCount;
+      }
     });
 
     const renderedSiteNames = new Set(
@@ -278,6 +292,16 @@ const ManualEntry = {
     document.getElementById('manualDayTotal').textContent = fmtMoney(itemizedTotal + outsideTotal);
     document.getElementById('manualQuickTotalNote').textContent = outsideTotal > 0
       ? `Includes ${fmtMoney(outsideTotal)} logged outside this grid (e.g. a quick total below).`
+      : '';
+
+    // Study counts (not dollars) per site, plus a combined figure next to
+    // the day total -- a quick total below doesn't specify a study count,
+    // so (unlike the dollar total) this only ever reflects the itemized grid.
+    document.getElementById('manualStudiesBreakdown').innerHTML = siteStudyCounts
+      .map(([label, count]) => `<div class="breakdown-row"><span>${escapeHtml(label)}</span><span>${count} ${count === 1 ? 'study' : 'studies'}</span></div>`)
+      .join('');
+    document.getElementById('manualStudiesTotal').textContent = studiesTotal > 0
+      ? ` · ${studiesTotal} ${studiesTotal === 1 ? 'study' : 'studies'} dictated`
       : '';
   },
 
