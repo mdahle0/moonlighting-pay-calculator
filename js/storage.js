@@ -6,7 +6,7 @@ function defaultData() {
     rateGroups: {
       louisville: {
         name: 'Louisville',
-        rates: { 'LDCT': 90, 'CT': 105, 'CT multiphase or CTA': 125, 'CT Runoff': 200, 'MR': 125, 'US': 50, 'XR': 20, 'DEXA': 30 }
+        rates: { 'LDCT': 90, 'CT': 105, 'CT multiphase or CTA': 125, 'CT Runoff': 200, 'MR': 125, 'US': 50, 'XR': 20, 'DEXA': 30, 'Fluoro Assist': 15 }
       },
       other: {
         name: 'Memphis / Mountain Home / Lexington / Tennessee Valley',
@@ -21,7 +21,7 @@ function defaultData() {
       { id: 'tennessee-valley', name: 'Tennessee Valley (Nashville)', rateGroupId: 'other' }
     ],
     entries: [],
-    schemaVersion: 4,
+    schemaVersion: 5,
     examLabels: {
       'LDCT': 'Low-dose CT',
       'CT Runoff': 'CT runoff (vascular)',
@@ -211,6 +211,16 @@ const Store = {
         if (e.examType === oldName) e.examType = newName;
       }
       this.data.schemaVersion = 4;
+    }
+    // One-time migration (schema v5): add the new "Fluoro Assist" exam type
+    // ($15/exam) to the Louisville rate group for accounts that already
+    // existed before it was added to the defaults.
+    if (priorSchemaVersion < 5) {
+      const louisville = this.data.rateGroups.louisville;
+      if (louisville && !('Fluoro Assist' in louisville.rates)) {
+        louisville.rates['Fluoro Assist'] = 15;
+      }
+      this.data.schemaVersion = 5;
     }
   },
 
