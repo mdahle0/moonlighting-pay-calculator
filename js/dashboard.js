@@ -78,7 +78,7 @@ const Dashboard = {
     if (goal.type === 'year' && goal.amount > 0) {
       const now = new Date();
       const startOfYear = new Date(now.getFullYear(), 0, 1);
-      const dayOfYear = Math.floor((startOfDay(now) - startOfYear) / 86400000) + 1;
+      const dayOfYear = calendarDaysBetween(startOfYear, now) + 1;
       const y = now.getFullYear();
       const daysInYear = ((y % 4 === 0 && y % 100 !== 0) || y % 400 === 0) ? 366 : 365;
       const expectedYTD = goal.amount * (dayOfYear / daysInYear);

@@ -229,12 +229,24 @@ function currentPeriodBounds(refDateISO) {
   const anchor = parseISO(settings.periodAnchor || todayISO());
   const ref = refDateISO ? parseISO(refDateISO) : parseISO(todayISO());
 
-  const msPerDay = 86400000;
-  const diffDays = Math.floor((startOfDay(ref) - startOfDay(anchor)) / msPerDay);
-  const cyclesElapsed = Math.floor(diffDays / lengthDays);
-  const start = new Date(anchor.getTime() + cyclesElapsed * lengthDays * msPerDay);
-  const end = new Date(start.getTime() + (lengthDays - 1) * msPerDay);
+  const cyclesElapsed = Math.floor(calendarDaysBetween(anchor, ref) / lengthDays);
+  const start = addCalendarDays(anchor, cyclesElapsed * lengthDays);
+  const end = addCalendarDays(start, lengthDays - 1);
   return { start: isoDate(start), end: isoDate(end) };
+}
+
+// Whole calendar days from a to b, ignoring time of day and DST. Pay-period
+// math must never use raw millisecond offsets (n * 86400000): the day the
+// clocks change is 23 or 25 hours long, which silently shifted a period's end
+// date back a day (e.g. the Nov 1-14 period ended on Nov 13).
+function calendarDaysBetween(a, b) {
+  const msPerDay = 86400000;
+  return Math.round((Date.UTC(b.getFullYear(), b.getMonth(), b.getDate())
+    - Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())) / msPerDay);
+}
+
+function addCalendarDays(d, n) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 }
 
 function startOfDay(d) {
@@ -250,9 +262,7 @@ function periodParity(dateISO) {
   const lengthDays = settings.periodType === 'weekly' ? 7 : 14;
   const anchor = parseISO(settings.periodAnchor || todayISO());
   const ref = parseISO(dateISO);
-  const msPerDay = 86400000;
-  const diffDays = Math.floor((startOfDay(ref) - startOfDay(anchor)) / msPerDay);
-  const cyclesElapsed = Math.floor(diffDays / lengthDays);
+  const cyclesElapsed = Math.floor(calendarDaysBetween(anchor, ref) / lengthDays);
   return ((cyclesElapsed % 2) + 2) % 2;
 }
 
@@ -355,18 +365,17 @@ function paydaysInRange(startISO, endISO) {
   const settings = Store.getSettings();
   const lengthDays = settings.periodType === 'weekly' ? 7 : 14;
   const anchor = startOfDay(parseISO(settings.periodAnchor || todayISO()));
-  const msPerDay = 86400000;
-  const rangeStart = parseISO(startISO).getTime();
-  const rangeEnd = parseISO(endISO).getTime();
+  const rangeStart = parseISO(startISO);
+  const rangeEnd = parseISO(endISO);
 
   const paydays = new Set();
-  let k = Math.floor((rangeStart - anchor.getTime()) / msPerDay / lengthDays) - 2;
+  let k = Math.floor(calendarDaysBetween(anchor, rangeStart) / lengthDays) - 2;
   while (true) {
-    const periodStart = new Date(anchor.getTime() + k * lengthDays * msPerDay);
-    const periodEnd = new Date(periodStart.getTime() + (lengthDays - 1) * msPerDay);
+    const periodStart = addCalendarDays(anchor, k * lengthDays);
+    const periodEnd = addCalendarDays(periodStart, lengthDays - 1);
     const payday = parseISO(nextFridayAfter(isoDate(periodEnd)));
-    if (payday.getTime() > rangeEnd + 7 * msPerDay) break;
-    if (payday.getTime() >= rangeStart && payday.getTime() <= rangeEnd) {
+    if (calendarDaysBetween(rangeEnd, payday) > 7) break;
+    if (payday >= rangeStart && payday <= rangeEnd) {
       paydays.add(isoDate(payday));
     }
     k++;
